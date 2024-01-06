@@ -13,20 +13,20 @@ class Element(Enum):
 
 
 class BrowserController:
-    def __init__(self, driver: WebDriver, url: str):
+    def __init__(self, driver: WebDriver):
         self.driver = driver
-        self.url = url
 
     def login(
             self,
+            url,
             elem_type: Element,
             id_val: str,
             password_val: str,
             login_button_val: str,
             user_id: str,
             user_password: str,
-    ) -> WebDriver:
-        self.driver.get(self.url)
+    ) -> None:
+        self.driver.get(url)
         user_id_elem = self.driver.find_element(elem_type, id_val)
         user_id_elem.send_keys(user_id)
         user_pw_elem = self.driver.find_element(elem_type, password_val)
@@ -34,4 +34,5 @@ class BrowserController:
 
         self.driver.find_element(elem_type, login_button_val).click()
 
-        return self.driver
+    def move(self, elem_type: Element, elem_val: str) -> None:
+        self.driver.find_element(elem_type, elem_val).click()
