@@ -12,7 +12,7 @@ class Element(Enum):
     ByXpath = By.XPATH
 
 
-class Login:
+class BrowserController:
     def __init__(self, driver: WebDriver, url: str):
         self.driver = driver
         self.url = url
