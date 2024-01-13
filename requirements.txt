@@ -7,3 +7,4 @@ pandas==2.1.4
 PySocks==1.7.1
 selenium==4.16.0
 setuptools==65.5.0
+python-dotenv==1.0.0
