@@ -41,11 +41,15 @@ class BaseSecurities(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_fund_specific(self):
+    def get_fund_specific(self) -> List[Value]:
         raise NotImplementedError()
 
     @abstractmethod
-    def get_fund_nisa_accum(self):
+    def get_fund_nisa_accum(self) -> List[Value]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_fund_old_nisa_accum(self) -> List[Value]:
         raise NotImplementedError()
 
     @abstractmethod
