@@ -1,6 +1,6 @@
 from enum import Enum
 
-from securities.base.model import Value
+from securities.model import Value
 import pandas as pd
 
 

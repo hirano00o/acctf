@@ -1,13 +1,10 @@
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 
-from bank.base.model import Transaction, Balance
-
-
-class BaseBank(metaclass=ABCMeta):
+class Base:
     driver: WebDriver
 
     def __init__(self):
@@ -23,11 +20,3 @@ class BaseBank(metaclass=ABCMeta):
 
     def close(self):
         self.driver.quit()
-
-    @abstractmethod
-    def get_balance(self, account_number: int) -> Balance:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_transaction_history(self, account_number: int) -> list[Transaction]:
-        raise NotImplementedError()

@@ -5,11 +5,12 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 
-from securities.base import BaseSecurities, Value
+from securities import Securities
+from securities.model import Value
 from securities.sbi.utils import get_formatted, AccountType
 
 
-class SBI(BaseSecurities, ABC):
+class SBI(Securities, ABC):
     _df_fund_specific: pd.DataFrame = None
     _df_fund_nisa_accum: pd.DataFrame = None
     _df_fund_old_nisa_accum: pd.DataFrame = None
