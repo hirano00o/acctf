@@ -26,7 +26,6 @@ class SBI(BaseSecurities, ABC):
         user_pw_elem.send_keys(password)
 
         self.driver.find_element(By.NAME, 'ACT_login').click()
-        user_id_elem = self.driver.find_element(By.NAME, 'user_id')
         return self
 
 
