@@ -29,6 +29,10 @@ class BaseSecurities(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_stock_specific_us(self) -> list[Value]:
+        raise NotImplementedError()
+
+    @abstractmethod
     def get_fund_specific(self) -> list[Value]:
         raise NotImplementedError()
 

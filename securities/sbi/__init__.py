@@ -43,6 +43,21 @@ class SBI(BaseSecurities, ABC):
         return _get_formatted(df)
 
 
+    def get_stock_specific_us(self) -> list[Value]:
+        # 口座管理ページ
+        self.driver.find_element(By.XPATH, '//*[@id="link02M"]/ul/li[3]/a/img').click()
+        # 口座(外貨建)ページ
+        self.driver.find_element(By.LINK_TEXT, '口座(外貨建)').click()
+        # 株式（現物）タブ
+        self.driver.find_element(By.LINK_TEXT, '株式（現物）').click()
+        html = self.driver.page_source.encode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+        table = soup.find_all("table", border="0", cellpadding="1", cellspacing="1", width="100%")
+
+        df = pd.read_html(StringIO(str(table)), header=0)[0]
+        return _get_formatted(df)
+
+
     def get_fund_specific(self) -> list[Value]:
         if self._df_fund_specific is None:
             self._get_fund_all()
