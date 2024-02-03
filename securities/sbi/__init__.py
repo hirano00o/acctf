@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 
 from securities.base import BaseSecurities, Value
-from securities.sbi.utils import _get_formatted
+from securities.sbi.utils import get_formatted, AccountType
 
 
 class SBI(BaseSecurities, ABC):
@@ -40,7 +40,7 @@ class SBI(BaseSecurities, ABC):
         table = soup.find_all("table", border="0", cellpadding="1", cellspacing="1", width="400")
 
         df = pd.read_html(StringIO(str(table)), header=0)[0]
-        return _get_formatted(df)
+        return get_formatted(df, AccountType.jp)
 
 
     def get_stock_specific_us(self) -> list[Value]:
@@ -55,25 +55,25 @@ class SBI(BaseSecurities, ABC):
         table = soup.find_all("table", border="0", cellpadding="1", cellspacing="1", width="100%")
 
         df = pd.read_html(StringIO(str(table)), header=0)[0]
-        return _get_formatted(df)
+        return get_formatted(df, AccountType.us)
 
 
     def get_fund_specific(self) -> list[Value]:
         if self._df_fund_specific is None:
             self._get_fund_all()
-        return _get_formatted(self._df_fund_specific)
+        return get_formatted(self._df_fund_specific, AccountType.jp)
 
 
     def get_fund_nisa_accum(self) -> list[Value]:
         if self._df_fund_nisa_accum is None:
             self._get_fund_all()
-        return _get_formatted(self._df_fund_nisa_accum)
+        return get_formatted(self._df_fund_nisa_accum, AccountType.jp)
 
 
     def get_fund_old_nisa_accum(self) -> list[Value]:
         if self._df_fund_old_nisa_accum is None:
             self._get_fund_all()
-        return _get_formatted(self._df_fund_old_nisa_accum)
+        return get_formatted(self._df_fund_old_nisa_accum, AccountType.jp)
 
 
     def _get_fund_all(self):
