@@ -10,6 +10,21 @@ class DepositType(Enum):
     savings = 5  # 貯蓄
 
 
+def str_to_deposit_type(deposit_type: str) -> DepositType:
+    if deposit_type.startswith("普通"):
+        return DepositType.ordinary
+    elif deposit_type.startswith("当座"):
+        return DepositType.current
+    elif deposit_type.startswith("定期"):
+        return DepositType.fixed
+    elif deposit_type.startswith("総合"):
+        return DepositType.general
+    elif deposit_type.startswith("貯蓄"):
+        return DepositType.savings
+
+    raise ValueError(f"unspecified deposit type: {deposit_type}")
+
+
 class Transaction:
     date: date
     content: str
