@@ -54,7 +54,7 @@ sbi.close()
 from bank.mizuho import Mizuho
 
 mizuho = Mizuho().login("<ユーザID>", "<パスワード>")
-b = mizuho.get_balance(7654321)
+b = mizuho.get_balance("7654321")
 print(f"口座番号, 店舗, 残高, 口座タイプ")
 print(f"{b.account_number}, {b.branch_name}, {b.value}, {b.deposit_type}")
 

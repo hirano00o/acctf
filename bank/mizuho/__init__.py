@@ -35,7 +35,7 @@ class Mizuho(Bank, ABC):
         return self
 
 
-    def get_balance(self, account_number: int) -> Balance:
+    def get_balance(self, account_number: str) -> Balance:
         self.driver.find_element(By.ID, 'MB_R011N030').click()
         # When there is the account select box
         try:
@@ -44,7 +44,7 @@ class Mizuho(Bank, ABC):
             # skip header
             next(tr)
             for num, t in enumerate(tr):
-                if t.find_elements(By.TAG_NAME, "span")[2].text == str(account_number):
+                if t.find_elements(By.TAG_NAME, "span")[2].text == account_number:
                     t.find_element(By.NAME, f"chkAccChkBx_{str(num).zfill(3)}").click()
                     break
             self.driver.find_element(By.XPATH, '//*[@id="main"]/section/input').click()
@@ -66,5 +66,5 @@ class Mizuho(Bank, ABC):
         )
 
 
-    def get_transaction_history(self, account_number: int) -> list[Transaction]:
+    def get_transaction_history(self, account_number: str) -> list[Transaction]:
         raise NotImplementedError()
