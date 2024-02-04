@@ -16,9 +16,9 @@ class Bank(Base, metaclass=ABCMeta):
         self.driver.quit()
 
     @abstractmethod
-    def get_balance(self, account_number: int) -> Balance:
+    def get_balance(self, account_number: str) -> Balance:
         raise NotImplementedError()
 
     @abstractmethod
-    def get_transaction_history(self, account_number: int) -> list[Transaction]:
+    def get_transaction_history(self, account_number: str) -> list[Transaction]:
         raise NotImplementedError()
