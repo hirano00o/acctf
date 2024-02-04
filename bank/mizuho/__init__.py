@@ -1,10 +1,13 @@
 from abc import ABC
+from datetime import date, datetime
 from io import StringIO
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from dateutil.relativedelta import relativedelta
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.select import Select
 
 from bank import Bank, Balance, Transaction
 from bank.model import str_to_deposit_type
@@ -66,5 +69,56 @@ class Mizuho(Bank, ABC):
         )
 
 
-    def get_transaction_history(self, account_number: str) -> list[Transaction]:
-        raise NotImplementedError()
+    def get_transaction_history(self, account_number: str, start: date = None, end: date = None) -> list[Transaction]:
+        """Gets the transaction history. If start or end parameter is empty, return the history of current month.
+
+        :param account_number: specify an account number.
+        :param start: start date of transaction history. After the 1st of the month before the previous month.
+        :param end: end date of transaction history. Until today.
+        """
+        self.driver.find_element(By.ID, 'MB_R011N040').click()
+        # When there is the account select box
+        try:
+            elem = self.driver.find_element(By.NAME, 'lstAccSel')
+            select = Select(elem)
+            for o in select.options:
+                if o.text.endswith(account_number):
+                    select.select_by_value(o.get_attribute("value"))
+                    break
+        except NoSuchElementException as e:
+            pass
+
+        if start is not None or end is not None:
+            max_date = date.today()
+            min_date = date(max_date.year, max_date.month, 1) + relativedelta(months=-2)
+            if min_date <= start < end <= max_date:
+                self.driver.find_elements(By.NAME, 'rdoInqMtdSpec')[1].click()
+                Select(self.driver.find_element(By.NAME, 'lstDateFrmYear')).select_by_value(str(start.year))
+                Select(self.driver.find_element(By.NAME, 'lstDateFrmMnth')).select_by_value(str(start.month))
+                Select(self.driver.find_element(By.NAME, 'lstDateFrmDay')).select_by_value(str(start.day))
+
+                Select(self.driver.find_element(By.NAME, 'lstDateToYear')).select_by_value(str(end.year))
+                Select(self.driver.find_element(By.NAME, 'lstDateToMnth')).select_by_value(str(end.month))
+                Select(self.driver.find_element(By.NAME, 'lstDateToDay')).select_by_value(str(end.day))
+        self.driver.find_element(By.XPATH, '//*[@id="main"]/section[1]/input').click()
+
+        html = self.driver.page_source.encode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+        table = soup.find("table", class_="n04110-t2")
+
+        df = pd.read_html(StringIO(str(table)))[0]
+        ret: list[Transaction] = []
+        for d in df.iterrows():
+            v: str = d[1].iloc[2].replace(",", "").replace("円", "")
+            if v == "-":
+                v: str = "-" + d[1].iloc[1].replace(",", "").replace("円", "")
+            try:
+                ret.append(Transaction(
+                    dt=datetime.strptime(d[1].iloc[0], "%Y.%m.%d").date(),
+                    content=d[1].iloc[3],
+                    value=float(v),
+                ))
+            except ValueError:
+                return ret
+
+        return ret

@@ -16,6 +16,7 @@ Currently, it supports the following.
       * cash/specified deposit
 * Mizuho Bank
   * Balance
+  * Transaction history
 
 # How to use
 
@@ -50,6 +51,8 @@ sbi.close()
 
 ### Bank
 
+#### Balance
+
 ```python
 from bank.mizuho import Mizuho
 
@@ -64,4 +67,26 @@ mizuho.close()
 ```console
 口座番号, 店舗, 残高, 口座タイプ
 7654321, 本店, 1234567.0, DepositType.ordinary
+```
+
+#### Transaction history
+
+```python
+from bank.mizuho import Mizuho
+
+mizuho = Mizuho().login("<ユーザID>", "<パスワード>")
+hist = mizuho.get_transaction_history("7654321")
+# You can also specify the start/end date.
+# hist = mizuho.get_transaction_history("7654321", date(2023, 12, 1), date(2023, 12, 31))
+print(f"日付, 取引内容, 金額")
+for h in hist:
+  print(f"{h.date}, {h.content}, {h.value}")
+
+mizuho.close()
+```
+
+```console
+日付, 取引内容, 金額
+2023-12-01, ＡＴＭ引き出し, -10000.0
+2024-12-20, 給与, 200000.0
 ```

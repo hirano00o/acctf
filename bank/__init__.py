@@ -1,3 +1,4 @@
+from datetime import date
 from abc import ABCMeta, abstractmethod
 
 from bank.model import Transaction, Balance
@@ -20,5 +21,5 @@ class Bank(Base, metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_transaction_history(self, account_number: str) -> list[Transaction]:
+    def get_transaction_history(self, account_number: str, start: date = None, end: date = None) -> list[Transaction]:
         raise NotImplementedError()
