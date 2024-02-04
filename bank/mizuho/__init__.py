@@ -1,4 +1,5 @@
 from abc import ABC
+from datetime import date
 from io import StringIO
 
 import pandas as pd
@@ -66,5 +67,5 @@ class Mizuho(Bank, ABC):
         )
 
 
-    def get_transaction_history(self, account_number: str) -> list[Transaction]:
+    def get_transaction_history(self, account_number: str, start: date = None, end: date = None) -> list[Transaction]:
         raise NotImplementedError()
