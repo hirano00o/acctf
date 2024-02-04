@@ -1,10 +1,13 @@
 from abc import ABC
+from io import StringIO
 
+import pandas as pd
+from bs4 import BeautifulSoup
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
 
 from bank import Bank, Balance, Transaction
+from bank.model import str_to_deposit_type
 
 
 class Mizuho(Bank, ABC):
@@ -33,7 +36,34 @@ class Mizuho(Bank, ABC):
 
 
     def get_balance(self, account_number: int) -> Balance:
-        raise NotImplementedError()
+        self.driver.find_element(By.ID, 'MB_R011N030').click()
+        # When there is the account select box
+        try:
+            elem = self.driver.find_element(By.CLASS_NAME, 'n03000-t1')
+            tr = iter(elem.find_elements(By.TAG_NAME, "tr"))
+            # skip header
+            next(tr)
+            for num, t in enumerate(tr):
+                if t.find_elements(By.TAG_NAME, "span")[2].text == str(account_number):
+                    t.find_element(By.NAME, f"chkAccChkBx_{str(num).zfill(3)}").click()
+                    break
+            self.driver.find_element(By.XPATH, '//*[@id="main"]/section/input').click()
+        except NoSuchElementException as e:
+            pass
+
+        html = self.driver.page_source.encode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+        table = soup.find_all("table")
+
+        df = pd.read_html(StringIO(str(table)))[0]
+        df = df.iloc[:,-1]
+
+        return Balance(
+            account_number=account_number,
+            deposit_type=str_to_deposit_type(df[1]),
+            branch_name=df[0],
+            value = float(df[3].replace(",", "").replace("円", ""))
+        )
 
 
     def get_transaction_history(self, account_number: int) -> list[Transaction]:
