@@ -15,7 +15,7 @@ class Base:
         self.driver.implicitly_wait(10)
 
     @abstractmethod
-    def login(self, user_id: str, password: str):
+    def login(self, user_id: str, password: str, otp: str | None = None):
         raise NotImplementedError()
 
     def close(self):
