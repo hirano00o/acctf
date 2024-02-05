@@ -19,7 +19,7 @@ class Mizuho(Bank, ABC):
         self.driver.get('https://web.ib.mizuhobank.co.jp/servlet/LOGBNK0000000B.do')
 
 
-    def login(self, user_id: str, password: str):
+    def login(self, user_id: str, password: str, otp: str | None = None):
         user_id_elem = self.driver.find_element(By.NAME, 'txbCustNo')
         user_id_elem.send_keys(user_id)
         self.driver.find_element(By.NAME, 'N00000-next').click()
