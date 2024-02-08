@@ -3,6 +3,7 @@
 This is a library that obtains deposit/withdrawal history, price and quantity of held stocks from bank and securities accounts.
 
 Currently, it supports the following.
+### Securities
 * SBI Securities
   * Yen-denominated
     * Stocks
@@ -14,9 +15,17 @@ Currently, it supports the following.
   * Foreign-denominated
     * Stocks(Only US)
       * cash/specified deposit
+
+### Bank
 * Mizuho Bank
-  * Balance
+  * Balance(Only Yen)
   * Transaction history
+* SBI Net Bank
+  * Balance(Include hybrid deposit)(Only Yen)
+
+### Other
+* WealthNavi
+  * Each valuation
 
 # How to use
 
@@ -59,7 +68,7 @@ from bank.mizuho import Mizuho
 mizuho = Mizuho().login("<ユーザID>", "<パスワード>")
 b = mizuho.get_balance("7654321")
 print(f"口座番号, 店舗, 残高, 口座タイプ")
-print(f"{b.account_number}, {b.branch_name}, {b.value}, {b.deposit_type}")
+print(f"{b[0].account_number}, {b[0].branch_name}, {b[0].value}, {b[0].deposit_type}")
 
 mizuho.close()
 ```
