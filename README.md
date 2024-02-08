@@ -59,7 +59,7 @@ from bank.mizuho import Mizuho
 mizuho = Mizuho().login("<ユーザID>", "<パスワード>")
 b = mizuho.get_balance("7654321")
 print(f"口座番号, 店舗, 残高, 口座タイプ")
-print(f"{b.account_number}, {b.branch_name}, {b.value}, {b.deposit_type}")
+print(f"{b[0].account_number}, {b[0].branch_name}, {b[0].value}, {b[0].deposit_type}")
 
 mizuho.close()
 ```

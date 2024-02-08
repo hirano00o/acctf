@@ -10,7 +10,7 @@ class Bank(Base, metaclass=ABCMeta):
         super().__init__()
 
     @abstractmethod
-    def get_balance(self, account_number: str) -> Balance:
+    def get_balance(self, account_number: str) -> list[Balance]:
         raise NotImplementedError()
 
     @abstractmethod

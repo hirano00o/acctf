@@ -38,7 +38,7 @@ class Mizuho(Bank, ABC):
         return self
 
 
-    def get_balance(self, account_number: str) -> Balance:
+    def get_balance(self, account_number: str) -> list[Balance]:
         self.driver.find_element(By.ID, 'MB_R011N030').click()
         # When there is the account select box
         try:
@@ -61,12 +61,12 @@ class Mizuho(Bank, ABC):
         df = pd.read_html(StringIO(str(table)))[0]
         df = df.iloc[:,-1]
 
-        return Balance(
+        return [Balance(
             account_number=account_number,
             deposit_type=str_to_deposit_type(df[1]),
             branch_name=df[0],
             value = float(df[3].replace(",", "").replace("円", ""))
-        )
+        )]
 
 
     def get_transaction_history(self, account_number: str, start: date = None, end: date = None) -> list[Transaction]:

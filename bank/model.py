@@ -8,6 +8,7 @@ class DepositType(Enum):
     fixed = 3  # 定期
     general = 4  # 総合
     savings = 5  # 貯蓄
+    hybrid = 6  # SBIハイブリッド預金
 
 
 def str_to_deposit_type(deposit_type: str) -> DepositType:
@@ -21,6 +22,8 @@ def str_to_deposit_type(deposit_type: str) -> DepositType:
         return DepositType.general
     elif deposit_type.startswith("貯蓄"):
         return DepositType.savings
+    elif deposit_type.startswith("ハイブリッド"):
+        return DepositType.hybrid
 
     raise ValueError(f"unspecified deposit type: {deposit_type}")
 
