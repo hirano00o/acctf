@@ -10,13 +10,6 @@ class Bank(Base, metaclass=ABCMeta):
         super().__init__()
 
     @abstractmethod
-    def login(self, user_id: str, password: str):
-        raise NotImplementedError()
-
-    def close(self):
-        self.driver.quit()
-
-    @abstractmethod
     def get_balance(self, account_number: str) -> Balance:
         raise NotImplementedError()
 
