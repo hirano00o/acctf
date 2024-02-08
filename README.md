@@ -3,6 +3,7 @@
 This is a library that obtains deposit/withdrawal history, price and quantity of held stocks from bank and securities accounts.
 
 Currently, it supports the following.
+### Securities
 * SBI Securities
   * Yen-denominated
     * Stocks
@@ -14,9 +15,17 @@ Currently, it supports the following.
   * Foreign-denominated
     * Stocks(Only US)
       * cash/specified deposit
+
+### Bank
 * Mizuho Bank
-  * Balance
+  * Balance(Only Yen)
   * Transaction history
+* SBI Net Bank
+  * Balance(Include hybrid deposit)(Only Yen)
+
+### Other
+* WealthNavi
+  * Each valuation
 
 # How to use
 
