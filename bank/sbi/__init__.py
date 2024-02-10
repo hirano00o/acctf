@@ -12,6 +12,9 @@ from bank.model import str_to_deposit_type
 
 
 class SBI(Bank, ABC):
+    account_number = ""
+    branch_name = ""
+
     def __init__(self):
         super().__init__()
         self.driver.get('https://www.netbk.co.jp/contents/pages/wpl010101/i010101CT/DI01010210')
@@ -24,20 +27,16 @@ class SBI(Bank, ABC):
         user_pw_elem = self.driver.find_element(By.ID, 'loginPwdSet')
         user_pw_elem.send_keys(password)
         self.driver.find_element(By.TAG_NAME, 'button').click()
+        time.sleep(5)
+        self.driver.set_window_size(1024, 600)
+        self._get_account_info()
 
         return self
 
 
     def get_balance(self, account_number: str) -> list[Balance]:
-        time.sleep(5)
-        self.driver.set_window_size(1024, 600)
-        branch_name = self.driver.find_element(
-            By.XPATH,
-            '/html/body/app/div[1]/ng-component/div/main/ng-component/div[1]/div/div/div/div/div/span/span[1]').text
-        if account_number == "" or account_number is None:
-            account_number= self.driver.find_element(
-                By.XPATH,
-                '/html/body/app/div[1]/ng-component/div/main/ng-component/div[1]/div/div/div/div/div/span/span[3]').text
+        if account_number != "" and account_number is not None:
+            self.account_number = account_number
 
         self.driver.find_element(By.CLASS_NAME, 'm-icon-ps_balance').click()
 
@@ -54,9 +53,9 @@ class SBI(Bank, ABC):
                     dtype = str_to_deposit_type("ハイブリッド")
                 ret.append(
                     Balance(
-                        account_number=account_number,
+                        account_number=self.account_number,
                         deposit_type=dtype,
-                        branch_name=branch_name,
+                        branch_name=self.branch_name,
                         value = float(d["残高"][0].replace(",", "").replace("円", ""))
                     )
                 )
@@ -71,4 +70,16 @@ class SBI(Bank, ABC):
         :param start: start date of transaction history. After the 1st of the month before the previous month.
         :param end: end date of transaction history. Until today.
         """
+        if account_number != "" and account_number is not None:
+            self.account_number = account_number
+
         return []
+
+    def _get_account_info(self):
+        self.branch_name = self.driver.find_element(
+            By.XPATH,
+            '/html/body/app/div[1]/ng-component/div/main/ng-component/div[1]/div/div/div/div/div/span/span[1]').text
+
+        self.account_number= self.driver.find_element(
+            By.XPATH,
+            '/html/body/app/div[1]/ng-component/div/main/ng-component/div[1]/div/div/div/div/div/span/span[3]').text
