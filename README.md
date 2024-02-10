@@ -22,6 +22,7 @@ Currently, it supports the following.
   * Transaction history
 * SBI Net Bank
   * Balance(Include hybrid deposit)(Only Yen)
+  * Transaction history(Include hybrid deposit)(Only Yen)
 
 ### Other
 * WealthNavi
