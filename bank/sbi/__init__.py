@@ -1,11 +1,12 @@
 import time
 from abc import ABC
-from datetime import date
+from datetime import date, datetime
 from io import StringIO
 
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 
 from bank import Bank, Balance, Transaction
 from bank.model import str_to_deposit_type
@@ -28,7 +29,7 @@ class SBI(Bank, ABC):
         user_pw_elem.send_keys(password)
         self.driver.find_element(By.TAG_NAME, 'button').click()
         time.sleep(5)
-        self.driver.set_window_size(1024, 600)
+        self.driver.set_window_size(1024, 1000)
         self._get_account_info()
 
         return self
@@ -73,7 +74,81 @@ class SBI(Bank, ABC):
         if account_number != "" and account_number is not None:
             self.account_number = account_number
 
-        return []
+        self.driver.find_element(By.CLASS_NAME, 'm-icon-ps_details').click()
+
+        # 代表口座
+        df = self._get_transaction(start, end)
+
+        # ハイブリッド預金
+        e = self.driver.find_elements(By.XPATH, '//ng-component/section/div/div[2]/div[1]/div[1]/div[2]/nb-select/div/div[1]')
+        if len(e) > 0:
+            e[0].click()
+            self.driver.find_element(By.XPATH, '//*[@id="form3-menu"]/li[2]').click()
+            df = pd.concat([df, self._get_transaction(start, end)]).sort_values("日付")
+
+        ret: list[Transaction] = []
+        for d in df.iterrows():
+            v: str = ""
+            if pd.isnull(d[1].iloc[2]):
+                v = d[1].iloc[3].replace(",", "").replace("円", "")
+            else:
+                v = "-" + d[1].iloc[2].replace(",", "").replace("円", "")
+            try:
+                ret.append(Transaction(
+                    dt=datetime.strptime(d[1].iloc[0], "%Y年%m月%d日").date(),
+                    content=d[1].iloc[1],
+                    value=float(v),
+                ))
+            except ValueError:
+                return ret
+
+        return ret
+
+    def _get_transaction(self, start: date = None, end: date = None) -> pd.DataFrame:
+        if start is not None:
+            max_date = date.today()
+            min_date = date(max_date.year-7, 1, 1)
+            if end == None:
+                end = max_date
+            if min_date <= start < end <= max_date:
+                # 期間指定選択
+                self.driver.find_element(By.XPATH, '//li[5]/label').click()
+
+            # 開始日
+            self.driver.find_element(By.XPATH, '//p[1]/nb-simple-select/span/span[2]').click()
+            self.driver.find_element(By.XPATH, f'//li[contains(text(), "{start.year}年")]').click()
+            self.driver.find_element(By.XPATH, '//p[2]/nb-simple-select/span/span[2]').click()
+            self.driver.find_element(By.XPATH, f'//li[contains(text(), "{start.month}月")]').click()
+            self.driver.find_element(By.XPATH, '//p[3]/nb-simple-select/span/span[2]').click()
+            self.driver.find_element(By.XPATH, f'//li[contains(text(), "{start.day}日")]').click()
+
+            # 終了日
+            self.driver.find_elements(By.XPATH, '//p[1]/nb-simple-select/span/span[2]')[1].click()
+            e = self.driver.find_elements(By.XPATH, f'//li[contains(text(), " {end.year}年 ")]')[1]
+            ActionChains(self.driver).move_to_element(e).perform()
+            e.click()
+            self.driver.find_elements(By.XPATH, '//p[2]/nb-simple-select/span/span[2]')[1].click()
+            e = self.driver.find_elements(By.XPATH, f'//li[contains(text(), " {end.month}月 ")]')[1]
+            ActionChains(self.driver).move_to_element(e).perform()
+            e.click()
+            self.driver.find_elements(By.XPATH, '//p[3]/nb-simple-select/span/span[2]')[1].click()
+            e = self.driver.find_elements(By.XPATH, f'//li[contains(text(), " {end.day}日 ")]')[1]
+            ActionChains(self.driver).move_to_element(e).perform()
+            e.click()
+
+        # 表示選択
+        self.driver.find_element(By.CSS_SELECTOR, '.m-btnEm-m.m-btnEffectAnc').click()
+
+        continue_button = self.driver.find_elements(By.CSS_SELECTOR, '.m-btn_icon_txt.ng-tns-c3-3.ng-star-inserted')
+        while len(continue_button) > 0:
+            continue_button[0].click()
+            continue_button = self.driver.find_elements(By.CSS_SELECTOR, '.m-btn_icon_txt.ng-tns-c3-3.ng-star-inserted')
+
+        html = self.driver.page_source.encode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+        table = soup.find("table")
+
+        return pd.read_html(StringIO(str(table)))[0]
 
     def _get_account_info(self):
         self.branch_name = self.driver.find_element(
