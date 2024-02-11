@@ -1,6 +1,6 @@
-# financial account fetcher
+# acctf
 
-### English | [日本語](https://github.com/hirano00o/financial-account-fetcher/blob/main/README.ja.md)
+### English | [日本語](https://github.com/hirano00o/acctf/blob/main/README.ja.md)
 
 This is a library that obtains deposit/withdrawal history, price and quantity of held stocks from bank and securities accounts.
 
@@ -35,7 +35,7 @@ Currently, it supports the following.
 ## Installation
 
 ```console
-pip install git+ssh://git@github.com/hirano00o/account-scraper.git
+pip install acctf
 ```
 
 ## Example
@@ -43,7 +43,7 @@ pip install git+ssh://git@github.com/hirano00o/account-scraper.git
 ### Securities
 
 ```python
-from securities.sbi import SBI
+from acctf.securities.sbi import SBI
 
 sbi = SBI().login("<ユーザID>", "<パスワード>")
 stocks = sbi.get_stock_specific()
@@ -66,7 +66,7 @@ sbi.close()
 #### Balance
 
 ```python
-from bank.mizuho import Mizuho
+from acctf.bank.mizuho import Mizuho
 
 mizuho = Mizuho().login("<ユーザID>", "<パスワード>")
 b = mizuho.get_balance("7654321")
@@ -84,7 +84,7 @@ mizuho.close()
 #### Transaction history
 
 ```python
-from bank.mizuho import Mizuho
+from acctf.bank.mizuho import Mizuho
 
 mizuho = Mizuho().login("<ユーザID>", "<パスワード>")
 hist = mizuho.get_transaction_history("7654321")
@@ -108,7 +108,7 @@ mizuho.close()
 #### WealthNavi
 
 ```python
-from other.wealthnavi import WealthNavi
+from acctf.other.wealthnavi import WealthNavi
 
 w = WealthNavi().login("<ユーザID>", "<パスワード>", "<ワンタイムパスワード>")
 # If you don't set the One Time Password

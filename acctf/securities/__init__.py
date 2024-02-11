@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
-from base import Base
-from securities.model import Value
+from acctf import Base
+from acctf.securities.model import Value
 
 
 class Securities(Base, metaclass=ABCMeta):

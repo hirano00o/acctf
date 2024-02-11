@@ -1,8 +1,8 @@
 from datetime import date
 from abc import ABCMeta, abstractmethod
 
-from bank.model import Transaction, Balance
-from base import Base
+from acctf.bank.model import Transaction, Balance
+from acctf import Base
 
 
 class Bank(Base, metaclass=ABCMeta):

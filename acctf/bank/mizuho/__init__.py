@@ -9,8 +9,8 @@ from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 
-from bank import Bank, Balance, Transaction
-from bank.model import str_to_deposit_type
+from acctf.bank import Bank, Balance, Transaction
+from acctf.bank.model import str_to_deposit_type
 
 
 class Mizuho(Bank, ABC):

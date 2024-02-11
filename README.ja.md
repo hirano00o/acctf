@@ -1,8 +1,8 @@
-# financial account fetcher
+# acctf
 
-### [English](https://github.com/hirano00o/financial-account-fetcher/blob/main/README.md) | 日本語
+### [English](https://github.com/hirano00o/acctf/blob/main/README.md) | 日本語
 
-financial account fetcherは、銀行や証券会社をスクレイピングして入出金履歴、株や投信の保有数や取得価額、現在価格を取得するライブラリです。
+acctfは、銀行や証券会社をスクレイピングして入出金履歴、株や投信の保有数や取得価額、現在価格を取得するライブラリです。
 
 下記の銀行や証券会社等に対応しています。
 ### 証券会社
@@ -35,7 +35,7 @@ financial account fetcherは、銀行や証券会社をスクレイピングし�
 ## インストール
 
 ```console
-pip install git+ssh://git@github.com/hirano00o/account-scraper.git
+pip install acctf
 ```
 
 ## サンプル
@@ -43,7 +43,7 @@ pip install git+ssh://git@github.com/hirano00o/account-scraper.git
 ### 証券会社
 
 ```python
-from securities.sbi import SBI
+from acctf.securities.sbi import SBI
 
 sbi = SBI().login("<ユーザID>", "<パスワード>")
 stocks = sbi.get_stock_specific()
@@ -66,7 +66,7 @@ sbi.close()
 #### 預金
 
 ```python
-from bank.mizuho import Mizuho
+from acctf.bank.mizuho import Mizuho
 
 mizuho = Mizuho().login("<ユーザID>", "<パスワード>")
 b = mizuho.get_balance("7654321")
@@ -84,7 +84,7 @@ mizuho.close()
 #### 入出金履歴
 
 ```python
-from bank.mizuho import Mizuho
+from acctf.bank.mizuho import Mizuho
 
 mizuho = Mizuho().login("<ユーザID>", "<パスワード>")
 hist = mizuho.get_transaction_history("7654321")
@@ -108,7 +108,7 @@ mizuho.close()
 #### WealthNavi
 
 ```python
-from other.wealthnavi import WealthNavi
+from acctf.other.wealthnavi import WealthNavi
 
 w = WealthNavi().login("<ユーザID>", "<パスワード>", "<ワンタイムパスワード>")
 # ワンタイムパスワードを設定していない場合

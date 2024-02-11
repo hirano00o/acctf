@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 
-from bank import Bank, Balance, Transaction
-from bank.model import str_to_deposit_type
+from acctf.bank import Bank, Balance, Transaction
+from acctf.bank.model import str_to_deposit_type
 
 
 class SBI(Bank, ABC):
