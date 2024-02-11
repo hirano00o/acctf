@@ -4,9 +4,9 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 
-from base import Base
-from other.wealthnavi.model import Asset
-from utils.format import format_displayed_money
+from acctf import Base
+from acctf.other.wealthnavi.model import Asset
+from acctf.utils.format import format_displayed_money
 
 
 class WealthNavi(Base):
