@@ -1,4 +1,6 @@
-# account scraper
+# financial account fetcher
+
+### English | [日本語](https://github.com/hirano00o/financial-account-fetcher/blob/main/README.ja.md)
 
 This is a library that obtains deposit/withdrawal history, price and quantity of held stocks from bank and securities accounts.
 
@@ -99,4 +101,33 @@ mizuho.close()
 日付, 取引内容, 金額
 2023-12-01, ＡＴＭ引き出し, -10000.0
 2024-12-20, 給与, 200000.0
+```
+
+### Other
+
+#### WealthNavi
+
+```python
+from other.wealthnavi import WealthNavi
+
+w = WealthNavi().login("<ユーザID>", "<パスワード>", "<ワンタイムパスワード>")
+# If you don't set the One Time Password
+# w = WealthNavi().login("<ユーザID>", "<パスワード>")
+print("資産クラス, 現在価格, 損益")
+for h in w.get_valuation():
+  print(f"{h.name}, {h.value}, {h.pl_value}")
+
+w.close()
+```
+
+```console
+資産クラス, 現在価格, 損益
+米国株(VTI), 123456.0, 12345.0
+日欧株(VEA), 123456.0, 12345.0
+新興国株(VWO), 123456.0, 12345.0
+債券(AGG), 123456.0, 12345.0
+金(GLD), 123456.0, 12345.0
+金(IAU), 123456.0, 12345.0
+不動産(IYR), 123456.0, 12345.0
+現金, 123456.0, 0.0
 ```
