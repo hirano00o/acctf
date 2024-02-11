@@ -35,7 +35,7 @@ acctfは、銀行や証券会社をスクレイピングして入出金履歴、
 ## インストール
 
 ```console
-pip install git+ssh://git@github.com/hirano00o/acctf.git
+pip install acctf
 ```
 
 ## サンプル

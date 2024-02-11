@@ -35,7 +35,7 @@ Currently, it supports the following.
 ## Installation
 
 ```console
-pip install git+ssh://git@github.com/hirano00o/acctf.git
+pip install acctf
 ```
 
 ## Example
