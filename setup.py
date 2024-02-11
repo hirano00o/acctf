@@ -6,12 +6,12 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
-    name="account-scraper",
-    version="0.0.1",
+    name="acctf",
+    version="0.0.2",
     description="library that scrapes the data from an account such as securities, bank",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/hirano00o/account-scraper",
+    url="https://github.com/hirano00o/acctf",
     author="hirano00o",
     classifiers=[
         "Programming Language :: Python :: 3",

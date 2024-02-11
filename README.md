@@ -1,6 +1,6 @@
-# financial account fetcher
+# acctf
 
-### English | [日本語](https://github.com/hirano00o/financial-account-fetcher/blob/main/README.ja.md)
+### English | [日本語](https://github.com/hirano00o/acctf/blob/main/README.ja.md)
 
 This is a library that obtains deposit/withdrawal history, price and quantity of held stocks from bank and securities accounts.
 
@@ -35,7 +35,7 @@ Currently, it supports the following.
 ## Installation
 
 ```console
-pip install git+ssh://git@github.com/hirano00o/account-scraper.git
+pip install git+ssh://git@github.com/hirano00o/acctf.git
 ```
 
 ## Example

@@ -1,8 +1,8 @@
-# financial account fetcher
+# acctf
 
-### [English](https://github.com/hirano00o/financial-account-fetcher/blob/main/README.md) | 日本語
+### [English](https://github.com/hirano00o/acctf/blob/main/README.md) | 日本語
 
-financial account fetcherは、銀行や証券会社をスクレイピングして入出金履歴、株や投信の保有数や取得価額、現在価格を取得するライブラリです。
+acctfは、銀行や証券会社をスクレイピングして入出金履歴、株や投信の保有数や取得価額、現在価格を取得するライブラリです。
 
 下記の銀行や証券会社等に対応しています。
 ### 証券会社
@@ -35,7 +35,7 @@ financial account fetcherは、銀行や証券会社をスクレイピングし�
 ## インストール
 
 ```console
-pip install git+ssh://git@github.com/hirano00o/account-scraper.git
+pip install git+ssh://git@github.com/hirano00o/acctf.git
 ```
 
 ## サンプル
