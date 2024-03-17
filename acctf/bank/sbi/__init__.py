@@ -111,7 +111,16 @@ class SBI(Bank, ABC):
 
         return ret
 
-    def _get_transaction(self, start: date = None, end: date = None) -> pd.DataFrame:
+    def _get_transaction(
+        self,
+        start: date = None,
+        end: date = None,
+        currency: CurrencyType = CurrencyType.jpy,
+    ) -> pd.DataFrame:
+        currency_map: dict = {
+            CurrencyType.jpy: '//nb-select/div/div[2]/ul/li[1]',
+            CurrencyType.usd: '//nb-select/div/div[2]/ul/li[2]',
+        }
         if start is not None:
             max_date = date.today()
             min_date = date(max_date.year-7, 1, 1)
@@ -142,6 +151,12 @@ class SBI(Bank, ABC):
             e = self.driver.find_elements(By.XPATH, f'//li[contains(text(), " {end.day}日 ")]')[1]
             ActionChains(self.driver).move_to_element(e).perform()
             e.click()
+
+        # 通貨選択(代表口座のみ)
+        self.driver.find_elements(By.XPATH, '//nb-select/div/div[1]/span[2]')[1].click()
+        e = self.driver.find_elements(By.XPATH, currency_map[currency])[1]
+        ActionChains(self.driver).move_to_element(e).perform()
+        e.click()
 
         # 表示選択
         self.driver.find_element(By.CSS_SELECTOR, '.m-btnEm-m.m-btnEffectAnc').click()
