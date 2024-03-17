@@ -10,6 +10,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 from acctf.bank import Bank, Balance, Transaction
 from acctf.bank.model import str_to_deposit_type, CurrencyType
+from acctf.utils.format import format_displayed_money
 
 
 class SBI(Bank, ABC):
@@ -84,22 +85,25 @@ class SBI(Bank, ABC):
         self.driver.find_element(By.CLASS_NAME, 'm-icon-ps_details').click()
 
         # 代表口座
-        df = self._get_transaction(start, end)
+        if currency is None:
+            currency = CurrencyType.jpy
 
-        # ハイブリッド預金
-        e = self.driver.find_elements(By.XPATH, '//ng-component/section/div/div[2]/div[1]/div[1]/div[2]/nb-select/div/div[1]')
-        if len(e) > 0:
-            e[0].click()
-            self.driver.find_element(By.XPATH, '//*[@id="form3-menu"]/li[2]').click()
-            df = pd.concat([df, self._get_transaction(start, end)]).sort_values("日付")
+        df = self._get_transaction(start, end, currency)
+        if currency == CurrencyType.jpy:
+            # ハイブリッド預金(Only Yen)
+            e = self.driver.find_elements(By.XPATH, '//ng-component/section/div/div[2]/div[1]/div[1]/div[2]/nb-select/div/div[1]')
+            if len(e) > 0:
+                e[0].click()
+                self.driver.find_element(By.XPATH, '//*[@id="form3-menu"]/li[2]').click()
+                df = pd.concat([df, self._get_transaction(start, end)]).sort_values("日付")
 
         ret: list[Transaction] = []
         for d in df.iterrows():
             v: str = ""
             if pd.isnull(d[1].iloc[2]):
-                v = d[1].iloc[3].replace(",", "").replace("円", "")
+                v = format_displayed_money(d[1].iloc[3])
             else:
-                v = "-" + d[1].iloc[2].replace(",", "").replace("円", "")
+                v = "-" + format_displayed_money(d[1].iloc[2])
             try:
                 ret.append(Transaction(
                     dt=datetime.strptime(d[1].iloc[0], "%Y年%m月%d日").date(),
