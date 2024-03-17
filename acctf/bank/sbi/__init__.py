@@ -91,7 +91,7 @@ class SBI(Bank, ABC):
         df = self._get_transaction(start, end, currency)
         if currency == CurrencyType.jpy:
             # ハイブリッド預金(Only Yen)
-            e = self.driver.find_elements(By.XPATH, '//ng-component/section/div/div[2]/div[1]/div[1]/div[2]/nb-select/div/div[1]')
+            e = self.driver.find_elements(By.XPATH, '//ng-component/section/div/div[3]/div[1]/div[1]/div[2]/nb-select/div/div[1]')
             if len(e) > 0:
                 e[0].click()
                 self.driver.find_element(By.XPATH, '//*[@id="form3-menu"]/li[2]').click()
