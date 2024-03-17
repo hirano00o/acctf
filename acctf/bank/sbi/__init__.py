@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 
 from acctf.bank import Bank, Balance, Transaction
-from acctf.bank.model import str_to_deposit_type
+from acctf.bank.model import str_to_deposit_type, CurrencyType
 
 
 class SBI(Bank, ABC):
@@ -64,12 +64,19 @@ class SBI(Bank, ABC):
         return ret
 
 
-    def get_transaction_history(self, account_number: str, start: date = None, end: date = None) -> list[Transaction]:
+    def get_transaction_history(
+        self,
+        account_number: str,
+        start: date = None,
+        end: date = None,
+        currency: CurrencyType = None,
+    ) -> list[Transaction]:
         """Gets the transaction history. If start or end parameter is empty, return the history of current month.
 
         :param account_number: specify an account number.
         :param start: start date of transaction history. After the 1st of the month before the previous month.
         :param end: end date of transaction history. Until today.
+        :param currency: currency of transaction history.
         """
         if account_number != "" and account_number is not None:
             self.account_number = account_number

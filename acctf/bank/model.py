@@ -2,6 +2,11 @@ from datetime import date
 from enum import Enum
 
 
+class CurrencyType(Enum):
+    jpy = 1
+    usd = 2
+
+
 class DepositType(Enum):
     ordinary = 1  # 普通
     current = 2  # 当座
