@@ -19,12 +19,12 @@ Currently, it supports the following.
       * cash/specified deposit
 
 ### Bank
-* Mizuho Bank
-  * Balance(Only Yen)
+* Mizuho Bank(Only Yen)
+  * Balance
   * Transaction history
 * SBI Net Bank
   * Balance(Include hybrid deposit)(Only Yen)
-  * Transaction history(Include hybrid deposit)(Only Yen)
+  * Transaction history(Include hybrid deposit)
 
 ### Other
 * WealthNavi
