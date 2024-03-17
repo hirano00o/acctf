@@ -9,7 +9,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 
 from acctf.bank import Bank, Balance, Transaction
-from acctf.bank.model import str_to_deposit_type
+from acctf.bank.model import str_to_deposit_type, CurrencyType
+from acctf.utils.format import format_displayed_money
 
 
 class SBI(Bank, ABC):
@@ -64,12 +65,19 @@ class SBI(Bank, ABC):
         return ret
 
 
-    def get_transaction_history(self, account_number: str, start: date = None, end: date = None) -> list[Transaction]:
+    def get_transaction_history(
+        self,
+        account_number: str,
+        start: date = None,
+        end: date = None,
+        currency: CurrencyType = None,
+    ) -> list[Transaction]:
         """Gets the transaction history. If start or end parameter is empty, return the history of current month.
 
         :param account_number: specify an account number.
         :param start: start date of transaction history. After the 1st of the month before the previous month.
         :param end: end date of transaction history. Until today.
+        :param currency: currency of transaction history.
         """
         if account_number != "" and account_number is not None:
             self.account_number = account_number
@@ -77,22 +85,25 @@ class SBI(Bank, ABC):
         self.driver.find_element(By.CLASS_NAME, 'm-icon-ps_details').click()
 
         # 代表口座
-        df = self._get_transaction(start, end)
+        if currency is None:
+            currency = CurrencyType.jpy
 
-        # ハイブリッド預金
-        e = self.driver.find_elements(By.XPATH, '//ng-component/section/div/div[2]/div[1]/div[1]/div[2]/nb-select/div/div[1]')
-        if len(e) > 0:
-            e[0].click()
-            self.driver.find_element(By.XPATH, '//*[@id="form3-menu"]/li[2]').click()
-            df = pd.concat([df, self._get_transaction(start, end)]).sort_values("日付")
+        df = self._get_transaction(start, end, currency)
+        if currency == CurrencyType.jpy:
+            # ハイブリッド預金(Only Yen)
+            e = self.driver.find_elements(By.XPATH, '//ng-component/section/div/div[3]/div[1]/div[1]/div[2]/nb-select/div/div[1]')
+            if len(e) > 0:
+                e[0].click()
+                self.driver.find_element(By.XPATH, '//*[@id="form3-menu"]/li[2]').click()
+                df = pd.concat([df, self._get_transaction(start, end)]).sort_values("日付")
 
         ret: list[Transaction] = []
         for d in df.iterrows():
             v: str = ""
             if pd.isnull(d[1].iloc[2]):
-                v = d[1].iloc[3].replace(",", "").replace("円", "")
+                v = format_displayed_money(d[1].iloc[3])
             else:
-                v = "-" + d[1].iloc[2].replace(",", "").replace("円", "")
+                v = "-" + format_displayed_money(d[1].iloc[2])
             try:
                 ret.append(Transaction(
                     dt=datetime.strptime(d[1].iloc[0], "%Y年%m月%d日").date(),
@@ -104,7 +115,16 @@ class SBI(Bank, ABC):
 
         return ret
 
-    def _get_transaction(self, start: date = None, end: date = None) -> pd.DataFrame:
+    def _get_transaction(
+        self,
+        start: date = None,
+        end: date = None,
+        currency: CurrencyType = CurrencyType.jpy,
+    ) -> pd.DataFrame:
+        currency_map: dict = {
+            CurrencyType.jpy: '//nb-select/div/div[2]/ul/li[1]',
+            CurrencyType.usd: '//nb-select/div/div[2]/ul/li[2]',
+        }
         if start is not None:
             max_date = date.today()
             min_date = date(max_date.year-7, 1, 1)
@@ -135,6 +155,12 @@ class SBI(Bank, ABC):
             e = self.driver.find_elements(By.XPATH, f'//li[contains(text(), " {end.day}日 ")]')[1]
             ActionChains(self.driver).move_to_element(e).perform()
             e.click()
+
+        # 通貨選択(代表口座のみ)
+        self.driver.find_elements(By.XPATH, '//nb-select/div/div[1]/span[2]')[1].click()
+        e = self.driver.find_elements(By.XPATH, currency_map[currency])[1]
+        ActionChains(self.driver).move_to_element(e).perform()
+        e.click()
 
         # 表示選択
         self.driver.find_element(By.CSS_SELECTOR, '.m-btnEm-m.m-btnEffectAnc').click()

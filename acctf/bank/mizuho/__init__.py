@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 
 from acctf.bank import Bank, Balance, Transaction
-from acctf.bank.model import str_to_deposit_type
+from acctf.bank.model import str_to_deposit_type, CurrencyType
 
 
 class Mizuho(Bank, ABC):
@@ -69,12 +69,19 @@ class Mizuho(Bank, ABC):
         )]
 
 
-    def get_transaction_history(self, account_number: str, start: date = None, end: date = None) -> list[Transaction]:
+    def get_transaction_history(
+        self,
+        account_number: str,
+        start: date = None,
+        end: date = None,
+        currency: CurrencyType = None,
+    ) -> list[Transaction]:
         """Gets the transaction history. If start or end parameter is empty, return the history of current month.
 
         :param account_number: specify an account number.
         :param start: start date of transaction history. After the 1st of the month before the previous month.
         :param end: end date of transaction history. Until today.
+        :param currency: currency of transaction history. But this parameter currently doesn't affect.
         """
         self.driver.find_element(By.ID, 'MB_R011N040').click()
         # When there is the account select box
