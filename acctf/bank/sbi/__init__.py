@@ -37,7 +37,7 @@ class SBI(Bank, ABC):
 
 
     def logout(self):
-        pass
+        self.driver.find_element(By.CSS_SELECTOR, '.header_logout.ng-star-inserted').click()
 
 
     def get_balance(self, account_number: str) -> list[Balance]:
