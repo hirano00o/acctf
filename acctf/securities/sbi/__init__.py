@@ -20,7 +20,7 @@ class SBI(Securities, ABC):
         self.driver.get('https://www.sbisec.co.jp/ETGate')
 
 
-    def login(self, user_id: str, password: str, otp: str | None = None):
+    def login(self, user_id: str, password: str, totp: str | None = None):
         user_id_elem = self.driver.find_element(By.NAME, 'user_id')
         user_id_elem.send_keys(user_id)
         user_pw_elem = self.driver.find_element(By.NAME, 'user_password')
