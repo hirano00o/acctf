@@ -28,6 +28,7 @@ setup(
         "pandas",
         "lxml",
         "PySocks",
+        "pyotp",
     ],
     python_requires='>=3.11',
 )
