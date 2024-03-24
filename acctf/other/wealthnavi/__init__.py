@@ -29,10 +29,12 @@ class WealthNavi(Base):
 
             self.driver.find_element(By.ID, 'authentication-code-login').click()
 
+        self.driver.set_window_size(1024, 1000)
+
         return self
 
     def logout(self):
-        pass
+        self.driver.find_element(By.CLASS_NAME, 'logout-submit').click()
 
     def get_valuation(self) -> list[Asset]:
         self.driver.set_window_size(1024, 600)
