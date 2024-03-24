@@ -31,6 +31,9 @@ class WealthNavi(Base):
 
         return self
 
+    def logout(self):
+        pass
+
     def get_valuation(self) -> list[Asset]:
         self.driver.set_window_size(1024, 600)
         self.driver.find_element(By.PARTIAL_LINK_TEXT, 'ポートフォリオ').click()

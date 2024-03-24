@@ -38,6 +38,10 @@ class Mizuho(Bank, ABC):
         return self
 
 
+    def logout(self):
+        pass
+
+
     def get_balance(self, account_number: str) -> list[Balance]:
         self.driver.find_element(By.ID, 'MB_R011N030').click()
         # When there is the account select box

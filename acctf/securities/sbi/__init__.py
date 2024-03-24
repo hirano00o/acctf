@@ -29,6 +29,8 @@ class SBI(Securities, ABC):
         self.driver.find_element(By.NAME, 'ACT_login').click()
         return self
 
+    def logout(self):
+        pass
 
     def get_stock_specific(self) -> list[Value]:
         # 口座管理ページ
