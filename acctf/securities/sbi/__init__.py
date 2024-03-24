@@ -30,7 +30,7 @@ class SBI(Securities, ABC):
         return self
 
     def logout(self):
-        pass
+        self.driver.find_element(By.XPATH, '//*[@id="logoutM"]/a/img').click()
 
     def get_stock_specific(self) -> list[Value]:
         # 口座管理ページ
