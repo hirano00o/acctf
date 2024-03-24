@@ -22,7 +22,7 @@ class SBI(Bank, ABC):
         self.driver.get('https://www.netbk.co.jp/contents/pages/wpl010101/i010101CT/DI01010210')
 
 
-    def login(self, user_id: str, password: str, otp: str | None = None):
+    def login(self, user_id: str, password: str, totp: str | None = None):
         user_id_elem = self.driver.find_element(By.ID, 'userNameNewLogin')
         user_id_elem.send_keys(user_id)
 

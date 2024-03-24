@@ -113,8 +113,8 @@ mizuho.close()
 ```python
 from acctf.other.wealthnavi import WealthNavi
 
-w = WealthNavi().login("<ユーザID>", "<パスワード>", "<ワンタイムパスワード>")
-# If you don't set the One Time Password
+w = WealthNavi().login("<ユーザID>", "<パスワード>", "<TOTP>")
+# If you don't set the Time-based One Time Password
 # w = WealthNavi().login("<ユーザID>", "<パスワード>")
 print("資産クラス, 現在価格, 損益")
 for h in w.get_valuation():

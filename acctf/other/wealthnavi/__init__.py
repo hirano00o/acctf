@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from acctf import Base
 from acctf.other.wealthnavi.model import Asset
 from acctf.utils.format import format_displayed_money
+from acctf.utils.totp import get_code
 
 
 class WealthNavi(Base):
@@ -14,7 +15,7 @@ class WealthNavi(Base):
         super().__init__()
         self.driver.get('https://invest.wealthnavi.com/login')
 
-    def login(self, user_id: str, password: str, otp: str | None = None):
+    def login(self, user_id: str, password: str, totp: str | None = None):
         user_id_elem = self.driver.find_element(By.ID, 'username')
         user_id_elem.send_keys(user_id)
 
@@ -23,9 +24,9 @@ class WealthNavi(Base):
 
         self.driver.find_element(By.ID, 'login').click()
 
-        if otp is not None:
+        if totp is not None:
             otp_elem = self.driver.find_element(By.ID, 'code')
-            otp_elem.send_keys(int(otp))
+            otp_elem.send_keys(int(get_code(totp)))
 
             self.driver.find_element(By.ID, 'authentication-code-login').click()
 
