@@ -51,6 +51,7 @@ print("銘柄, 数量, 取得単価, 現在値")
 for s in stocks:
   print(f"{s.name}, {s.amount}, {s.acquisition_value}, {s.current_value}")
 
+sbi.logout()
 sbi.close()
 ```
 
@@ -73,6 +74,7 @@ b = mizuho.get_balance("7654321")
 print(f"口座番号, 店舗, 残高, 口座タイプ")
 print(f"{b[0].account_number}, {b[0].branch_name}, {b[0].value}, {b[0].deposit_type}")
 
+mizuho.logout()
 mizuho.close()
 ```
 
@@ -94,6 +96,7 @@ print(f"日付, 取引内容, 金額")
 for h in hist:
   print(f"{h.date}, {h.content}, {h.value}")
 
+mizuho.logout()
 mizuho.close()
 ```
 
@@ -117,6 +120,7 @@ print("資産クラス, 現在価格, 損益")
 for h in w.get_valuation():
   print(f"{h.name}, {h.value}, {h.pl_value}")
 
+w.logout()
 w.close()
 ```
 

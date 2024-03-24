@@ -36,6 +36,10 @@ class SBI(Bank, ABC):
         return self
 
 
+    def logout(self):
+        self.driver.find_element(By.CSS_SELECTOR, '.header_logout.ng-star-inserted').click()
+
+
     def get_balance(self, account_number: str) -> list[Balance]:
         if account_number != "" and account_number is not None:
             self.account_number = account_number

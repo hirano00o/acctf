@@ -17,5 +17,9 @@ class Base:
     def login(self, user_id: str, password: str, otp: str | None = None):
         raise NotImplementedError()
 
+    @abstractmethod
+    def logout(self):
+        raise NotImplementedError()
+
     def close(self):
         self.driver.quit()
