@@ -17,8 +17,8 @@ class SBI(Bank, ABC):
     account_number = ""
     branch_name = ""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, executable_path: str = None):
+        super().__init__(executable_path=executable_path)
         self.driver.get('https://www.netbk.co.jp/contents/pages/wpl010101/i010101CT/DI01010210')
 
 

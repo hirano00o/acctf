@@ -6,8 +6,8 @@ from acctf import Base
 
 
 class Bank(Base, metaclass=ABCMeta):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, executable_path: str = None):
+        super().__init__(executable_path=executable_path)
 
     @abstractmethod
     def get_balance(self, account_number: str) -> list[Balance]:
