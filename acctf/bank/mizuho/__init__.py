@@ -14,8 +14,8 @@ from acctf.bank.model import str_to_deposit_type, CurrencyType
 
 
 class Mizuho(Bank, ABC):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, executable_path: str = None):
+        super().__init__(executable_path=executable_path)
         self.driver.get('https://web.ib.mizuhobank.co.jp/servlet/LOGBNK0000000B.do')
 
 

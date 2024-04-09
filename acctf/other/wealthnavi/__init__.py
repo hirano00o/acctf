@@ -11,8 +11,8 @@ from acctf.utils.totp import get_code
 
 
 class WealthNavi(Base):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, executable_path: str = None):
+        super().__init__(executable_path=executable_path)
         self.driver.get('https://invest.wealthnavi.com/login')
 
     def login(self, user_id: str, password: str, totp: str | None = None):

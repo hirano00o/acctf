@@ -15,8 +15,8 @@ class SBI(Securities, ABC):
     _df_fund_nisa_accum: pd.DataFrame = None
     _df_fund_old_nisa_accum: pd.DataFrame = None
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, executable_path: str = None):
+        super().__init__(executable_path=executable_path)
         self.driver.get('https://www.sbisec.co.jp/ETGate')
 
 
