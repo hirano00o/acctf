@@ -1,12 +1,14 @@
 from abc import ABCMeta, abstractmethod
 
+from selenium import webdriver
+
 from acctf import Base
 from acctf.securities.model import Value
 
 
 class Securities(Base, metaclass=ABCMeta):
-    def __init__(self, executable_path: str = None):
-        super().__init__(executable_path=executable_path)
+    def __init__(self, driver: webdriver = None):
+        super().__init__(driver=driver)
 
     @abstractmethod
     def get_stock_specific(self) -> list[Value]:

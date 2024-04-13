@@ -2,6 +2,7 @@ from io import StringIO
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 from acctf import Base
@@ -11,8 +12,8 @@ from acctf.utils.totp import get_code
 
 
 class WealthNavi(Base):
-    def __init__(self, executable_path: str = None):
-        super().__init__(executable_path=executable_path)
+    def __init__(self, driver: webdriver = None):
+        super().__init__(driver=driver)
         self.driver.get('https://invest.wealthnavi.com/login')
 
     def login(self, user_id: str, password: str, totp: str | None = None):
