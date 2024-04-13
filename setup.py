@@ -23,12 +23,12 @@ setup(
     install_requires=[
         "beautifulsoup4",
         "bs4",
-        "chromedriver-binary",
         "selenium",
         "pandas",
         "lxml",
         "PySocks",
         "pyotp",
+        "html5lib",
     ],
     python_requires='>=3.11',
 )
