@@ -44,8 +44,15 @@ pip install acctf
 
 ```python
 from acctf.securities.sbi import SBI
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
-sbi = SBI().login("<ユーザID>", "<パスワード>")
+options = Options()
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+driver = webdriver.Chrome(options=options)
+
+sbi = SBI(driver=driver).login("<ユーザID>", "<パスワード>")
 stocks = sbi.get_stock_specific()
 print("銘柄, 数量, 取得単価, 現在値")
 for s in stocks:
@@ -68,8 +75,15 @@ sbi.close()
 
 ```python
 from acctf.bank.mizuho import Mizuho
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
-mizuho = Mizuho().login("<ユーザID>", "<パスワード>")
+options = Options()
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+driver = webdriver.Chrome(options=options)
+
+mizuho = Mizuho(driver=driver).login("<ユーザID>", "<パスワード>")
 b = mizuho.get_balance("7654321")
 print(f"口座番号, 店舗, 残高, 口座タイプ")
 print(f"{b[0].account_number}, {b[0].branch_name}, {b[0].value}, {b[0].deposit_type}")
@@ -87,8 +101,15 @@ mizuho.close()
 
 ```python
 from acctf.bank.mizuho import Mizuho
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
-mizuho = Mizuho().login("<ユーザID>", "<パスワード>")
+options = Options()
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+driver = webdriver.Chrome(options=options)
+
+mizuho = Mizuho(driver=driver).login("<ユーザID>", "<パスワード>")
 hist = mizuho.get_transaction_history("7654321")
 # You can also specify the start/end date.
 # hist = mizuho.get_transaction_history("7654321", date(2023, 12, 1), date(2023, 12, 31))
@@ -112,8 +133,15 @@ mizuho.close()
 
 ```python
 from acctf.other.wealthnavi import WealthNavi
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
-w = WealthNavi().login("<ユーザID>", "<パスワード>", "<TOTP>")
+options = Options()
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+driver = webdriver.Chrome(options=options)
+
+w = WealthNavi(driver=driver).login("<ユーザID>", "<パスワード>", "<TOTP>")
 # Time-based One Time Passwordを設定していない場合
 # w = WealthNavi().login("<ユーザID>", "<パスワード>")
 print("資産クラス, 現在価格, 損益")

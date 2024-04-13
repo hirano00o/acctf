@@ -7,7 +7,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="acctf",
-    version="0.2.1",
+    version="0.3.0",
     description="library that scrapes the data from an account such as securities, bank",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -23,12 +23,12 @@ setup(
     install_requires=[
         "beautifulsoup4",
         "bs4",
-        "chromedriver-binary",
         "selenium",
         "pandas",
         "lxml",
         "PySocks",
         "pyotp",
+        "html5lib",
     ],
     python_requires='>=3.11',
 )

@@ -1,13 +1,15 @@
 from datetime import date
 from abc import ABCMeta, abstractmethod
 
+from selenium import webdriver
+
 from acctf.bank.model import Transaction, Balance, CurrencyType
 from acctf import Base
 
 
 class Bank(Base, metaclass=ABCMeta):
-    def __init__(self, executable_path: str = None):
-        super().__init__(executable_path=executable_path)
+    def __init__(self, driver: webdriver = None):
+        super().__init__(driver=driver)
 
     @abstractmethod
     def get_balance(self, account_number: str) -> list[Balance]:

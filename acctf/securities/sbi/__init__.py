@@ -3,6 +3,7 @@ from io import StringIO
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 from acctf.securities import Securities
@@ -15,8 +16,8 @@ class SBI(Securities, ABC):
     _df_fund_nisa_accum: pd.DataFrame = None
     _df_fund_old_nisa_accum: pd.DataFrame = None
 
-    def __init__(self, executable_path: str = None):
-        super().__init__(executable_path=executable_path)
+    def __init__(self, driver: webdriver = None):
+        super().__init__(driver=driver)
         self.driver.get('https://www.sbisec.co.jp/ETGate')
 
 
