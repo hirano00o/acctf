@@ -5,6 +5,7 @@ from io import StringIO
 
 import pandas as pd
 from bs4 import BeautifulSoup
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 
@@ -17,8 +18,8 @@ class SBI(Bank, ABC):
     account_number = ""
     branch_name = ""
 
-    def __init__(self, executable_path: str = None):
-        super().__init__(executable_path=executable_path)
+    def __init__(self, driver: webdriver = None):
+        super().__init__(driver=driver)
         self.driver.get('https://www.netbk.co.jp/contents/pages/wpl010101/i010101CT/DI01010210')
 
 
