@@ -8,8 +8,8 @@ from acctf import Base
 
 
 class Bank(Base, metaclass=ABCMeta):
-    def __init__(self, driver: webdriver = None):
-        super().__init__(driver=driver)
+    def __init__(self, driver: webdriver = None, timeout: float = 30):
+        super().__init__(driver=driver, timeout=timeout)
 
     @abstractmethod
     def get_balance(self, account_number: str) -> list[Balance]:

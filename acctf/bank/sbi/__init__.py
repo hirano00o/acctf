@@ -8,7 +8,6 @@ from selenium import webdriver
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support import expected_conditions
 
 from acctf.bank import Bank, Balance, Transaction
 from acctf.bank.model import str_to_deposit_type, CurrencyType
@@ -25,10 +24,10 @@ class SBI(Bank, ABC):
 
 
     def login(self, user_id: str, password: str, totp: str | None = None):
-        user_id_elem = self.driver.find_element(By.ID, 'userNameNewLogin')
+        user_id_elem = self.find_element(By.ID, 'userNameNewLogin')
         user_id_elem.send_keys(user_id)
 
-        user_pw_elem = self.driver.find_element(By.ID, 'loginPwdSet')
+        user_pw_elem = self.find_element(By.ID, 'loginPwdSet')
         user_pw_elem.send_keys(password)
         self.driver.find_element(By.TAG_NAME, 'button').click()
         self.driver.set_window_size(1024, 1000)
@@ -90,8 +89,8 @@ class SBI(Bank, ABC):
             self.account_number = account_number
 
         details = 'm-icon-ps_details'
-        self.wait.until(expected_conditions.presence_of_element_located((By.CLASS_NAME, details)))
-        self.driver.find_element(By.CLASS_NAME, details).click()
+        elem = self.find_element(By.CLASS_NAME, details)
+        elem.click()
 
         # 代表口座
         if currency is None:
@@ -101,8 +100,7 @@ class SBI(Bank, ABC):
         if currency == CurrencyType.jpy:
             # ハイブリッド預金(Only Yen)
             hybrid = '//ng-component/section/div/div[3]/div[1]/div[1]/div[2]/nb-select/div/div[1]'
-            self.wait.until(expected_conditions.presence_of_element_located((By.XPATH, hybrid)))
-            e = self.driver.find_elements(By.XPATH, hybrid)
+            e = self.find_elements(By.XPATH, hybrid)
             if len(e) > 0:
                 e[0].click()
                 self.driver.find_element(By.XPATH, '//*[@id="form3-menu"]/li[2]').click()
@@ -143,8 +141,8 @@ class SBI(Bank, ABC):
                 end = max_date
             if min_date <= start < end <= max_date:
                 # 期間指定選択
+                period = '//li[5]/label'
                 try:
-                    period = '//li[5]/label'
                     elem = self.wait.until(lambda x: x.find_element(By.XPATH, period))
                     elem.click()
                 except TimeoutException as e:
@@ -176,8 +174,8 @@ class SBI(Bank, ABC):
 
         # 通貨選択(代表口座のみ)
         select_currency = '//nb-select/div/div[1]/span[2]'
-        self.wait.until(expected_conditions.presence_of_element_located((By.XPATH, select_currency)))
-        self.driver.find_elements(By.XPATH, select_currency)[1].click()
+        elem = self.find_elements(By.XPATH, select_currency)
+        elem[1].click()
         e = self.driver.find_elements(By.XPATH, currency_map[currency])[1]
         ActionChains(self.driver).move_to_element(e).perform()
         e.click()

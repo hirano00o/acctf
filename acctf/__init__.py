@@ -10,7 +10,7 @@ class Base:
     driver: webdriver
     wait: WebDriverWait
 
-    def __init__(self, driver: webdriver, timeout: float = 10):
+    def __init__(self, driver: webdriver, timeout: float = 30):
         self.driver = driver
         self.wait = WebDriverWait(self.driver, timeout=timeout)
 

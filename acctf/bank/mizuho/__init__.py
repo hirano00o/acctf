@@ -21,11 +21,11 @@ class Mizuho(Bank, ABC):
 
 
     def login(self, user_id: str, password: str, totp: str | None = None):
-        user_id_elem = self.driver.find_element(By.NAME, 'txbCustNo')
+        user_id_elem = self.find_element(By.NAME, 'txbCustNo')
         user_id_elem.send_keys(user_id)
         self.driver.find_element(By.NAME, 'N00000-next').click()
 
-        user_pw_elem = self.driver.find_element(By.NAME, 'PASSWD_LoginPwdInput')
+        user_pw_elem = self.find_element(By.NAME, 'PASSWD_LoginPwdInput')
         user_pw_elem.send_keys(password)
         self.driver.find_element(By.ID, 'btn_login').click()
 
