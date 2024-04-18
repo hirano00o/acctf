@@ -126,7 +126,7 @@ class Mizuho(Bank, ABC):
                 Select(self.driver.find_element(By.NAME, 'lstDateToMnth')).select_by_value(str(end.month))
                 Select(self.driver.find_element(By.NAME, 'lstDateToDay')).select_by_value(str(end.day))
             else:
-                raise AttributeError
+                raise AttributeError(f"date can be set between {min_date} and {max_date}")
         inquiry_transaction = '//*[@id="main"]/section[1]/input'
         elem = self.find_element(By.XPATH, inquiry_transaction)
         elem.click()
