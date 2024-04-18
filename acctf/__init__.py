@@ -1,3 +1,5 @@
+import sys
+import traceback
 from abc import abstractmethod
 from typing import Any
 
@@ -25,13 +27,25 @@ class Base:
     def close(self):
         self.driver.quit()
 
+    def wait_loading(self, by: str, value: str, has_raised: bool = True):
+        try:
+            self.wait.until_not(lambda x: x.find_element(by, value))
+        except TimeoutException as e:
+            if not has_raised:
+                return None
+            tb = sys.exc_info()[2]
+            traceback.print_exc()
+            raise TimeoutException(f"{e}: increase the timeout or check if the element({value}) exists").with_traceback(tb)
+
     def find_element(self, by: str, value: str, has_raised: bool = True) -> Any:
         try:
             elem = self.wait.until(lambda x: x.find_element(by, value))
         except TimeoutException as e:
             if not has_raised:
                 return None
-            raise TimeoutException(f"{e}: increase the timeout or check if the element({value}) exists")
+            tb = sys.exc_info()[2]
+            traceback.print_exc()
+            raise TimeoutException(f"{e}: increase the timeout or check if the element({value}) exists").with_traceback(tb)
         return elem
 
     def find_elements(self, by: str, value: str, has_raised: bool = True) -> Any:
@@ -40,5 +54,7 @@ class Base:
         except TimeoutException as e:
             if not has_raised:
                 return None
-            raise TimeoutException(f"{e}: increase the timeout or check if the element({value}) exists")
+            tb = sys.exc_info()[2]
+            traceback.print_exc()
+            raise TimeoutException(f"{e}: increase the timeout or check if the element({value}) exists").with_traceback(tb)
         return elem
