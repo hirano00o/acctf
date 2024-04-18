@@ -5,6 +5,7 @@ from typing import Any
 
 from selenium import webdriver
 from selenium.common import TimeoutException
+from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
 
@@ -51,6 +52,17 @@ class Base:
     def find_elements(self, by: str, value: str, has_raised: bool = True) -> Any:
         try:
             elem = self.wait.until(lambda x: x.find_elements(by, value))
+        except TimeoutException as e:
+            if not has_raised:
+                return None
+            tb = sys.exc_info()[2]
+            traceback.print_exc()
+            raise TimeoutException(f"{e}: increase the timeout or check if the element({value}) exists").with_traceback(tb)
+        return elem
+
+    def find_element_with_wait_visibility(self, by: str, value: str, has_raised: bool = True) -> Any:
+        try:
+            elem = self.wait.until(expected_conditions.visibility_of_element_located((by, value)))
         except TimeoutException as e:
             if not has_raised:
                 return None

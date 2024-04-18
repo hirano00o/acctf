@@ -18,8 +18,8 @@ class SBI(Bank, ABC):
     account_number = ""
     branch_name = ""
 
-    def __init__(self, driver: webdriver = None):
-        super().__init__(driver=driver)
+    def __init__(self, driver: webdriver = None, timeout: float = 30):
+        super().__init__(driver=driver, timeout=timeout)
         self.driver.get('https://www.netbk.co.jp/contents/pages/wpl010101/i010101CT/DI01010210')
 
 
@@ -45,7 +45,7 @@ class SBI(Bank, ABC):
             self.account_number = account_number
 
         balance = 'm-icon-ps_balance'
-        elem = self.find_element(By.CLASS_NAME, balance)
+        elem = self.find_element_with_wait_visibility(By.CLASS_NAME, balance)
         elem.click()
 
         self.wait_loading(By.CLASS_NAME, "loadingServer")
@@ -91,7 +91,7 @@ class SBI(Bank, ABC):
             self.account_number = account_number
 
         details = 'm-icon-ps_details'
-        elem = self.find_element(By.CLASS_NAME, details)
+        elem = self.find_element_with_wait_visibility(By.CLASS_NAME, details)
         elem.click()
 
         self.wait_loading(By.CLASS_NAME, "loadingServer")
