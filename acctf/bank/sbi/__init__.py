@@ -45,7 +45,7 @@ class SBI(Bank, ABC):
             self.account_number = account_number
 
         balance = 'm-icon-ps_balance'
-        elem = self.find_element_with_wait_visibility(By.CLASS_NAME, balance)
+        elem = self.find_element_to_be_clickable(By.CLASS_NAME, balance)
         elem.click()
 
         self.wait_loading(By.CLASS_NAME, "loadingServer")
@@ -91,7 +91,7 @@ class SBI(Bank, ABC):
             self.account_number = account_number
 
         details = 'm-icon-ps_details'
-        elem = self.find_element_with_wait_visibility(By.CLASS_NAME, details)
+        elem = self.find_element_to_be_clickable(By.CLASS_NAME, details)
         elem.click()
 
         self.wait_loading(By.CLASS_NAME, "loadingServer")
@@ -201,6 +201,7 @@ class SBI(Bank, ABC):
         while continue_button is not None:
             continue_button[0].click()
             continue_button = self.find_elements(By.CSS_SELECTOR, _continue, False)
+            self.wait_loading(By.CSS_SELECTOR, '.show-loading.ng-tns-c3-3.ng-star-inserted')
 
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')

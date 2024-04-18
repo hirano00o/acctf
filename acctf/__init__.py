@@ -60,9 +60,9 @@ class Base:
             raise TimeoutException(f"{e}: increase the timeout or check if the element({value}) exists").with_traceback(tb)
         return elem
 
-    def find_element_with_wait_visibility(self, by: str, value: str, has_raised: bool = True) -> Any:
+    def find_element_to_be_clickable(self, by: str, value: str, has_raised: bool = True) -> Any:
         try:
-            elem = self.wait.until(expected_conditions.visibility_of_element_located((by, value)))
+            elem = self.wait.until(expected_conditions.element_to_be_clickable((by, value)))
         except TimeoutException as e:
             if not has_raised:
                 return None
