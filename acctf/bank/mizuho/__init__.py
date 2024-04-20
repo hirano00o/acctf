@@ -46,7 +46,7 @@ class Mizuho(Bank, ABC):
 
     def get_balance(self, account_number: str) -> list[Balance]:
         balance = 'MB_R011N030'
-        elem = self.find_element(By.ID, balance)
+        elem = self.find_element_to_be_clickable(By.ID, balance)
         elem.click()
         # When there is the account select box
         try:
@@ -95,7 +95,7 @@ class Mizuho(Bank, ABC):
         :param currency: currency of transaction history. But this parameter currently doesn't affect.
         """
         transaction = 'MB_R011N040'
-        elem = self.find_element(By.ID, transaction)
+        elem = self.find_element_to_be_clickable(By.ID, transaction)
         elem.click()
         # When there is the account select box
         try:
