@@ -68,6 +68,8 @@ class Mizuho(Bank, ABC):
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find_all("table")
+        if table is None or len(table) == 0:
+            return []
 
         df = pd.read_html(StringIO(str(table)))[0]
         df = df.iloc[:,-1]
@@ -134,6 +136,8 @@ class Mizuho(Bank, ABC):
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find("table", class_="n04110-t2")
+        if table is None:
+            return []
 
         df = pd.read_html(StringIO(str(table)))[0]
         ret: list[Transaction] = []

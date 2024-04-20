@@ -42,6 +42,8 @@ class SBI(Securities, ABC):
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find_all("table", border="0", cellpadding="1", cellspacing="1", width="400")
+        if table is None or len(table) == 0:
+            return []
 
         df = pd.read_html(StringIO(str(table)), header=0)[0]
         return get_formatted(df, AccountType.jp)
@@ -57,6 +59,8 @@ class SBI(Securities, ABC):
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find_all("table", border="0", cellpadding="1", cellspacing="1", width="100%")
+        if table is None or len(table) == 0:
+            return []
 
         df = pd.read_html(StringIO(str(table)), header=0)[0]
         return get_formatted(df, AccountType.us)
@@ -89,6 +93,8 @@ class SBI(Securities, ABC):
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find_all("table", border="0", cellpadding="1", cellspacing="1", width="400")
+        if table is None or len(table) == 0:
+            return
 
         df = pd.read_html(StringIO(str(table)), header=0)
         for d in df:

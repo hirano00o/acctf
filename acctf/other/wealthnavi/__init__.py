@@ -43,6 +43,8 @@ class WealthNavi(Base):
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find("table", id="assets-class-data")
+        if table is None:
+            return []
 
         df = pd.read_html(StringIO(str(table)), header=0)[0]
         df = df.iloc[:,0:3]

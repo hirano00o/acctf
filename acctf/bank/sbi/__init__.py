@@ -53,6 +53,8 @@ class SBI(Bank, ABC):
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find_all("table")
+        if table is None or len(table) == 0:
+            return []
 
         df = pd.read_html(StringIO(str(table)))
         ret = []
@@ -110,7 +112,10 @@ class SBI(Bank, ABC):
                 time.sleep(1)
                 elem = self.find_element(By.XPATH, '//*[@id="form3-menu"]/li[2]')
                 elem.click()
-                df = pd.concat([df, self._get_transaction(start, end)]).sort_values("日付")
+                df_hybrid = self._get_transaction(start, end)
+                if df is None and df_hybrid is None:
+                    return []
+                df = pd.concat([df, df_hybrid]).sort_values("日付")
 
         ret: list[Transaction] = []
         for d in df.iterrows():
@@ -135,7 +140,7 @@ class SBI(Bank, ABC):
         start: date = None,
         end: date = None,
         currency: CurrencyType = CurrencyType.jpy,
-    ) -> pd.DataFrame:
+    ) -> pd.DataFrame | None:
         currency_map: dict = {
             CurrencyType.jpy: '//nb-select/div/div[2]/ul/li[1]',
             CurrencyType.usd: '//nb-select/div/div[2]/ul/li[2]',
@@ -206,8 +211,7 @@ class SBI(Bank, ABC):
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find("table")
-
-        return pd.read_html(StringIO(str(table)))[0]
+        return None if table is None else pd.read_html(StringIO(str(table)))[0]
 
     def _get_account_info(self):
         branch_name = '/html/body/app/div[1]/ng-component/div/main/ng-component/div[1]/div/div/div/div/div/span/span[1]'
