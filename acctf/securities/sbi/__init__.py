@@ -16,13 +16,13 @@ class SBI(Securities, ABC):
     _df_fund_nisa_accum: pd.DataFrame = None
     _df_fund_old_nisa_accum: pd.DataFrame = None
 
-    def __init__(self, driver: webdriver = None):
-        super().__init__(driver=driver)
+    def __init__(self, driver: webdriver = None, timeout: float = 30):
+        super().__init__(driver=driver, timeout=timeout)
         self.driver.get('https://www.sbisec.co.jp/ETGate')
 
 
     def login(self, user_id: str, password: str, totp: str | None = None):
-        user_id_elem = self.driver.find_element(By.NAME, 'user_id')
+        user_id_elem = self.find_element(By.NAME, 'user_id')
         user_id_elem.send_keys(user_id)
         user_pw_elem = self.driver.find_element(By.NAME, 'user_password')
         user_pw_elem.send_keys(password)
@@ -35,9 +35,9 @@ class SBI(Securities, ABC):
 
     def get_stock_specific(self) -> list[Value]:
         # 口座管理ページ
-        self.driver.find_element(By.XPATH, '//*[@id="link02M"]/ul/li[3]/a/img').click()
+        self.find_element(By.XPATH, '//*[@id="link02M"]/ul/li[3]/a/img').click()
         # 株式(現物)タブ
-        self.driver.find_element(By.LINK_TEXT, '株式(現物)').click()
+        self.find_element(By.LINK_TEXT, '株式(現物)').click()
 
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
@@ -49,11 +49,11 @@ class SBI(Securities, ABC):
 
     def get_stock_specific_us(self) -> list[Value]:
         # 口座管理ページ
-        self.driver.find_element(By.XPATH, '//*[@id="link02M"]/ul/li[3]/a/img').click()
+        self.find_element(By.XPATH, '//*[@id="link02M"]/ul/li[3]/a/img').click()
         # 口座(外貨建)ページ
-        self.driver.find_element(By.LINK_TEXT, '口座(外貨建)').click()
+        self.find_element(By.LINK_TEXT, '口座(外貨建)').click()
         # 株式（現物）タブ
-        self.driver.find_element(By.LINK_TEXT, '株式（現物）').click()
+        self.find_element(By.LINK_TEXT, '株式（現物）').click()
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find_all("table", border="0", cellpadding="1", cellspacing="1", width="100%")
@@ -82,9 +82,9 @@ class SBI(Securities, ABC):
 
     def _get_fund_all(self):
         # 口座管理ページ
-        self.driver.find_element(By.XPATH, '//*[@id="link02M"]/ul/li[3]/a/img').click()
+        self.find_element(By.XPATH, '//*[@id="link02M"]/ul/li[3]/a/img').click()
         # 投信タブ
-        self.driver.find_element(By.LINK_TEXT, '投信').click()
+        self.find_element(By.LINK_TEXT, '投信').click()
 
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')

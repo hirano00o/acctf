@@ -7,8 +7,8 @@ from acctf.securities.model import Value
 
 
 class Securities(Base, metaclass=ABCMeta):
-    def __init__(self, driver: webdriver = None):
-        super().__init__(driver=driver)
+    def __init__(self, driver: webdriver = None, timeout: float = 30):
+        super().__init__(driver=driver, timeout=timeout)
 
     @abstractmethod
     def get_stock_specific(self) -> list[Value]:
