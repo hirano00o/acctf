@@ -6,7 +6,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
 from selenium import webdriver
-from selenium.common import NoSuchElementException
+from selenium.common import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 
@@ -15,23 +15,24 @@ from acctf.bank.model import str_to_deposit_type, CurrencyType
 
 
 class Mizuho(Bank, ABC):
-    def __init__(self, driver: webdriver = None):
-        super().__init__(driver=driver)
+    def __init__(self, driver: webdriver = None, timeout: float = 30):
+        super().__init__(driver=driver, timeout=timeout)
         self.driver.get('https://web.ib.mizuhobank.co.jp/servlet/LOGBNK0000000B.do')
 
 
     def login(self, user_id: str, password: str, totp: str | None = None):
-        user_id_elem = self.driver.find_element(By.NAME, 'txbCustNo')
+        user_id_elem = self.find_element(By.NAME, 'txbCustNo')
         user_id_elem.send_keys(user_id)
         self.driver.find_element(By.NAME, 'N00000-next').click()
 
-        user_pw_elem = self.driver.find_element(By.NAME, 'PASSWD_LoginPwdInput')
+        user_pw_elem = self.find_element(By.NAME, 'PASSWD_LoginPwdInput')
         user_pw_elem.send_keys(password)
         self.driver.find_element(By.ID, 'btn_login').click()
 
         try:
-            elem = self.driver.find_element(By.XPATH, '//*[@id="button-section"]/a/img')
-        except NoSuchElementException as e:
+            important_notification = '//*[@id="button-section"]/a/img'
+            elem = self.find_element(By.XPATH, important_notification)
+        except TimeoutException:
             pass
         else:
             elem.click()
@@ -44,10 +45,13 @@ class Mizuho(Bank, ABC):
 
 
     def get_balance(self, account_number: str) -> list[Balance]:
-        self.driver.find_element(By.ID, 'MB_R011N030').click()
+        balance = 'MB_R011N030'
+        elem = self.find_element_to_be_clickable(By.ID, balance)
+        elem.click()
         # When there is the account select box
         try:
-            elem = self.driver.find_element(By.CLASS_NAME, 'n03000-t1')
+            select = 'n03000-t1'
+            elem = self.find_element(By.CLASS_NAME, select)
             tr = iter(elem.find_elements(By.TAG_NAME, "tr"))
             # skip header
             next(tr)
@@ -56,7 +60,9 @@ class Mizuho(Bank, ABC):
                     t.find_element(By.NAME, f"chkAccChkBx_{str(num).zfill(3)}").click()
                     break
             self.driver.find_element(By.XPATH, '//*[@id="main"]/section/input').click()
-        except NoSuchElementException as e:
+        except NoSuchElementException:
+            pass
+        except TimeoutException:
             pass
 
         html = self.driver.page_source.encode('utf-8')
@@ -88,23 +94,30 @@ class Mizuho(Bank, ABC):
         :param end: end date of transaction history. Until today.
         :param currency: currency of transaction history. But this parameter currently doesn't affect.
         """
-        self.driver.find_element(By.ID, 'MB_R011N040').click()
+        transaction = 'MB_R011N040'
+        elem = self.find_element_to_be_clickable(By.ID, transaction)
+        elem.click()
         # When there is the account select box
         try:
-            elem = self.driver.find_element(By.NAME, 'lstAccSel')
+            select_account = 'lstAccSel'
+            elem = self.find_element(By.NAME, select_account)
             select = Select(elem)
             for o in select.options:
                 if o.text.endswith(account_number):
                     select.select_by_value(o.get_attribute("value"))
                     break
-        except NoSuchElementException as e:
+        except NoSuchElementException:
+            pass
+        except TimeoutException:
             pass
 
         if start is not None or end is not None:
             max_date = date.today()
             min_date = date(max_date.year, max_date.month, 1) + relativedelta(months=-2)
             if min_date <= start < end <= max_date:
-                self.driver.find_elements(By.NAME, 'rdoInqMtdSpec')[1].click()
+                period = 'rdoInqMtdSpec'
+                elem = self.find_elements(By.NAME, period)
+                elem[1].click()
                 Select(self.driver.find_element(By.NAME, 'lstDateFrmYear')).select_by_value(str(start.year))
                 Select(self.driver.find_element(By.NAME, 'lstDateFrmMnth')).select_by_value(str(start.month))
                 Select(self.driver.find_element(By.NAME, 'lstDateFrmDay')).select_by_value(str(start.day))
@@ -112,7 +125,11 @@ class Mizuho(Bank, ABC):
                 Select(self.driver.find_element(By.NAME, 'lstDateToYear')).select_by_value(str(end.year))
                 Select(self.driver.find_element(By.NAME, 'lstDateToMnth')).select_by_value(str(end.month))
                 Select(self.driver.find_element(By.NAME, 'lstDateToDay')).select_by_value(str(end.day))
-        self.driver.find_element(By.XPATH, '//*[@id="main"]/section[1]/input').click()
+            else:
+                raise AttributeError(f"date can be set between {min_date} and {max_date}")
+        inquiry_transaction = '//*[@id="main"]/section[1]/input'
+        elem = self.find_element(By.XPATH, inquiry_transaction)
+        elem.click()
 
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')

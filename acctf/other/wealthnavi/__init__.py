@@ -12,12 +12,12 @@ from acctf.utils.totp import get_code
 
 
 class WealthNavi(Base):
-    def __init__(self, driver: webdriver = None):
-        super().__init__(driver=driver)
+    def __init__(self, driver: webdriver = None, timeout: float = 30):
+        super().__init__(driver=driver, timeout=timeout)
         self.driver.get('https://invest.wealthnavi.com/login')
 
     def login(self, user_id: str, password: str, totp: str | None = None):
-        user_id_elem = self.driver.find_element(By.ID, 'username')
+        user_id_elem = self.find_element(By.ID, 'username')
         user_id_elem.send_keys(user_id)
 
         user_pw_elem = self.driver.find_element(By.ID, 'password')
@@ -26,12 +26,10 @@ class WealthNavi(Base):
         self.driver.find_element(By.ID, 'login').click()
 
         if totp is not None:
-            otp_elem = self.driver.find_element(By.ID, 'code')
+            otp_elem = self.find_element(By.ID, 'code')
             otp_elem.send_keys(int(get_code(totp)))
 
             self.driver.find_element(By.ID, 'authentication-code-login').click()
-
-        self.driver.set_window_size(1024, 1000)
 
         return self
 
@@ -40,7 +38,7 @@ class WealthNavi(Base):
 
     def get_valuation(self) -> list[Asset]:
         self.driver.set_window_size(1024, 600)
-        self.driver.find_element(By.PARTIAL_LINK_TEXT, 'ポートフォリオ').click()
+        self.find_element(By.PARTIAL_LINK_TEXT, 'ポートフォリオ').click()
 
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
