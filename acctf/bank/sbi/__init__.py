@@ -117,6 +117,8 @@ class SBI(Bank, ABC):
                     return []
                 df = pd.concat([df, df_hybrid]).sort_values("日付")
 
+        if df is None:
+            return []
         ret: list[Transaction] = []
         for d in df.iterrows():
             v: str = ""

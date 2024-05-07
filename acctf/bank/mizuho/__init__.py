@@ -140,6 +140,8 @@ class Mizuho(Bank, ABC):
             return []
 
         df = pd.read_html(StringIO(str(table)))[0]
+        if df is None:
+            return []
         ret: list[Transaction] = []
         for d in df.iterrows():
             v: str = d[1].iloc[2].replace(",", "").replace("円", "")

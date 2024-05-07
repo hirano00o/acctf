@@ -48,6 +48,8 @@ class WealthNavi(Base):
 
         df = pd.read_html(StringIO(str(table)), header=0)[0]
         df = df.iloc[:,0:3]
+        if df is None:
+            return []
         ret: list[Asset] = []
         for d in df.iterrows():
             v, plv = format_displayed_money(d[1].iloc[1]), format_displayed_money(d[1].iloc[2])
