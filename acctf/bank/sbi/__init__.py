@@ -92,6 +92,8 @@ class SBI(Bank, ABC):
         if account_number != "" and account_number is not None:
             self.account_number = account_number
 
+        self.wait_loading(By.CLASS_NAME, "loading-Server")
+
         details = 'm-icon-ps_details'
         elem = self.find_element_to_be_clickable(By.CLASS_NAME, details)
         elem.click()
