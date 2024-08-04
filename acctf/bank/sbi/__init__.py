@@ -98,6 +98,14 @@ class SBI(Bank, ABC):
         if account_name != AccountName.Representative and currency != CurrencyType.jpy:
             raise AttributeError("currencies other than JPY can only be combined with the AccountName.Representative")
 
+        exist_directory = False
+        try:
+            os.makedirs(download_directory)
+        except FileExistsError:
+            exist_directory = True
+
+        download_path = f"{str(Path(download_directory))}/nyushukinmeisai_*.csv"
+
         self.wait_loading(By.CLASS_NAME, "loading-Server")
 
         details = 'm-icon-ps_details'
@@ -117,9 +125,10 @@ class SBI(Bank, ABC):
 
         try:
             # 明細のダウンロード
-            file = self._download_transaction(download_directory=download_directory)
+            file = self._download_transaction(download_full_path=download_path)
         except Exception as e:
-            self._remove_download(download_directory=download_directory)
+            self._remove_download(download_directory=download_directory, file_path=file,
+                                  exist_directory=exist_directory)
             raise e
 
         if file == "" or file is None:
@@ -129,7 +138,8 @@ class SBI(Bank, ABC):
         try:
             df = pd.read_csv(file, names=header, header=0, usecols=[0, 1, 2, 3], encoding="sjis")
         except Exception as e:
-            self._remove_download(download_directory=download_directory)
+            self._remove_download(download_directory=download_directory, file_path=file,
+                                  exist_directory=exist_directory)
             raise e
 
         if df is None:
@@ -144,10 +154,12 @@ class SBI(Bank, ABC):
                     value=float(v.replace(",", "")),
                 ))
             except ValueError:
-                self._remove_download(download_directory=download_directory)
+                self._remove_download(download_directory=download_directory, file_path=file,
+                                      exist_directory=exist_directory)
                 return ret
 
-        self._remove_download(download_directory=download_directory)
+        self._remove_download(download_directory=download_directory, file_path=file,
+                              exist_directory=exist_directory)
         return ret
 
     def _change_account(self, account_name: AccountName | str):
@@ -180,7 +192,7 @@ class SBI(Bank, ABC):
         e.click()
         time.sleep(1)
 
-    def _download_transaction(self, download_directory: Path) -> str:
+    def _download_transaction(self, download_full_path: str) -> str:
         e = self.find_element(By.CSS_SELECTOR, '.m-boxError.ng-star-inserted', False)
         if e is not None:
             return ""
@@ -191,18 +203,19 @@ class SBI(Bank, ABC):
         self.find_element(By.XPATH, '//section/div/div[1]/div[1]/div[2]/ul[1]/li[1]/nb-button3/a/span').click()
 
         timeout_sec = 3
-        while not glob.glob(f"{download_directory}/*.csv"):
+        while not glob.glob(download_full_path):
             time.sleep(1)
             timeout_sec -= 1
             if timeout_sec < 0:
                 raise Exception("downloads are taking too long")
 
-        return glob.glob(f"{download_directory}/*.csv")[0]
+        return glob.glob(download_full_path)[0]
 
-    def _remove_download(self, download_directory: Path):
-        for p in glob.glob(f"{str(download_directory)}/*.csv"):
-            if os.path.isfile(p):
-                os.remove(p)
+    def _remove_download(self, download_directory: Path, file_path: str, exist_directory: bool):
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+        if not exist_directory:
+            os.removedirs(download_directory)
 
     def _get_transaction(
         self,
@@ -218,6 +231,7 @@ class SBI(Bank, ABC):
                 # 絞り込み
                 elem = self.find_element(By.XPATH, "//section/div/div[2]/div[1]/nav/ul/li[1]")
                 elem.click()
+                time.sleep(1)
             else:
                 raise AttributeError(f"date can be set between {min_date} and {max_date}")
 
