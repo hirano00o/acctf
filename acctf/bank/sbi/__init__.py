@@ -222,6 +222,8 @@ class SBI(Bank, ABC):
         start: date = None,
         end: date = None,
     ) -> pd.DataFrame | None:
+        default_period_text = "最新100明細"
+        period_text = "期間指定"
         if start is not None:
             max_date = date.today()
             min_date = date(max_date.year - 7, 1, 1)
@@ -235,11 +237,13 @@ class SBI(Bank, ABC):
             else:
                 raise AttributeError(f"date can be set between {min_date} and {max_date}")
 
-            # 期間指定
-            self.find_element(By.XPATH, '//*[@id="filterTerm"]').click()
-            time.sleep(1)
-            self.find_element(By.XPATH, '//*[@id="filterTerm_item_5"]').click()
-            time.sleep(1)
+            period_value = self.find_element(By.XPATH, '//*[@id="filterTerm"]/span[2]').text
+            if period_value == default_period_text:
+                # 期間指定
+                self.find_element(By.XPATH, '//*[@id="filterTerm"]').click()
+                time.sleep(1)
+                self.find_element(By.XPATH, '//*[@id="filterTerm_item_5"]').click()
+                time.sleep(1)
 
             # 開始日
             # Sleep until an animation ended
@@ -269,6 +273,14 @@ class SBI(Bank, ABC):
             e = self.find_elements(By.XPATH, f'//li[contains(text(), "{end.day}日")]')[1]
             ActionChains(self.driver).move_to_element(e).perform()
             e.click()
+        else:
+            period_value = self.find_element(By.XPATH, '//*[@id="filterTerm"]/span[2]').text
+            if period_value == period_text:
+                # Change to 最新100明細
+                self.find_element(By.XPATH, '//*[@id="filterTerm"]').click()
+                time.sleep(1)
+                self.find_element(By.XPATH, '//*[@id="filterTerm_item_0"]').click()
+                time.sleep(1)
 
         # 適用
         display = '.m-btnEm-m.m-btnEffectAnc'
