@@ -1,46 +1,46 @@
 # acctf
 
-### English | [日本語](https://github.com/hirano00o/acctf/blob/main/README.ja.md)
+### [English](https://github.com/hirano00o/acctf/blob/main/README.md) | 日本語
 
-This is a library that obtains deposit/withdrawal history, price and quantity of held stocks from bank and securities accounts.
+acctfは、銀行や証券会社をスクレイピングして入出金履歴、株や投信の保有数や取得価額、現在価格を取得するライブラリです。
 
-Currently, it supports the following.
-### Securities
-* SBI Securities
-  * Yen-denominated
-    * Stocks
-      * cash/specified deposit
-    * Funds
-      * specified deposit
-      * NISA deposit(accumulated investment limit)
-      * Old accumulated NISA deposit
-  * Foreign-denominated
-    * Stocks(Only US)
-      * cash/specified deposit
+下記の銀行や証券会社等に対応しています。
+### 証券会社
+* SBI証券
+  * 円建て
+    * 株式
+      * 株式(現物)
+    * 投信
+      * 投資信託（金額/特定預り）
+      * 投資信託（金額/NISA預り（つみたて投資枠））
+      * 投資信託（金額/旧つみたてNISA預り）
+  * 外貨建て(USのみ)
+    * 株式
+      * 株式(現物)
 
-### Bank
-* Mizuho Bank(Only Yen)
-  * Balance
-  * Transaction history
-* SBI Net Bank
-  * Balance(Include hybrid deposit)(Only Yen)
-  * Transaction history(Include hybrid deposit)
+### 銀行
+* みずほ銀行(円のみ)
+  * 預金
+  * 入出金履歴
+* SBIネット銀行
+  * 預金(ハイブリッド含む)(円のみ)
+  * 入出金履歴(ハイブリッド含む)
 
-### Other
-* WealthNavi
-  * Each valuation
+### その他
+* WealthNavi(円表示のみ)
+  * 各資産クラス
 
-# How to use
+# 利用方法
 
-## Installation
+## インストール
 
 ```console
 pip install acctf
 ```
 
-## Example
+## サンプル
 
-### Securities
+### 証券会社
 
 ```python
 from acctf.securities.sbi import SBI
@@ -69,9 +69,9 @@ sbi.close()
 2222 銘柄3, 2000, 3450, 3456
 ```
 
-### Bank
+### 銀行
 
-#### Balance
+#### 預金
 
 ```python
 from acctf.bank.mizuho import Mizuho
@@ -97,7 +97,7 @@ mizuho.close()
 7654321, 本店, 1234567.0, DepositType.ordinary
 ```
 
-#### Transaction history
+#### 入出金履歴
 
 ```python
 from acctf.bank.mizuho import Mizuho
@@ -127,7 +127,7 @@ mizuho.close()
 2024-12-20, 給与, 200000.0
 ```
 
-### Other
+### その他
 
 #### WealthNavi
 
@@ -142,7 +142,7 @@ options.add_argument('--no-sandbox')
 driver = webdriver.Chrome(options=options)
 
 w = WealthNavi(driver=driver).login("<ユーザID>", "<パスワード>", "<TOTP>")
-# If you don't set the Time-based One Time Password
+# Time-based One Time Passwordを設定していない場合
 # w = WealthNavi().login("<ユーザID>", "<パスワード>")
 print("資産クラス, 現在価格, 損益")
 for h in w.get_valuation():
