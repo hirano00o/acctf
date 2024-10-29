@@ -200,7 +200,7 @@ class SBI(Bank, ABC):
         # ダウンロード
         self.find_element(By.XPATH, '//section/div/div[1]/nav/ul/li[2]/ul/li[2]').click()
         # CSV
-        self.find_element(By.XPATH, '//section/div/div[1]/div[1]/div[2]/ul[1]/li[1]/nb-button3/a/span').click()
+        self.find_element(By.XPATH, '//span[contains(text(), "CSV")]').click()
 
         timeout_sec = 3
         while not glob.glob(download_full_path):
@@ -224,17 +224,17 @@ class SBI(Bank, ABC):
     ) -> pd.DataFrame | None:
         default_period_text = "最新100明細"
         period_text = "期間指定"
+        # 絞り込み
+        elem = self.find_element(By.XPATH, "//section/div/div[2]/div[1]/nav/ul/li[1]")
+        elem.click()
+        time.sleep(1)
+
         if start is not None:
             max_date = date.today()
             min_date = date(max_date.year - 7, 1, 1)
             if end is None:
                 end = max_date
-            if min_date <= start < end <= max_date:
-                # 絞り込み
-                elem = self.find_element(By.XPATH, "//section/div/div[2]/div[1]/nav/ul/li[1]")
-                elem.click()
-                time.sleep(1)
-            else:
+            if not min_date <= start < end <= max_date:
                 raise AttributeError(f"date can be set between {min_date} and {max_date}")
 
             period_value = self.find_element(By.XPATH, '//*[@id="filterTerm"]/span[2]').text
