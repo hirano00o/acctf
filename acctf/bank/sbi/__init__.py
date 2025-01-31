@@ -33,6 +33,7 @@ class SBI(Bank, ABC):
         user_pw_elem.send_keys(password)
         self.driver.find_element(By.XPATH, '//nb-button-login/button').click()
         self.driver.set_window_size(1024, 3480)
+        time.sleep(1)
         self._get_account_info()
 
         return self
@@ -241,36 +242,35 @@ class SBI(Bank, ABC):
             if period_value == default_period_text:
                 # 期間指定
                 self.find_element(By.XPATH, '//*[@id="filterTerm"]').click()
-                time.sleep(1)
+                self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c4-4.ng-star-inserted")
                 self.find_element(By.XPATH, '//*[@id="filterTerm_item_5"]').click()
-                time.sleep(1)
+                self.find_element(By.CLASS_NAME, "term-date-slc.ng-tns-c3-3.ng-star-inserted")
 
             # 開始日
-            # Sleep until an animation ended
             self.find_element(By.XPATH, '//p[1]/nb-simple-select/span/span[2]').click()
-            time.sleep(1)
-            self.find_element(By.XPATH, f'//li[contains(text(), "{start.year}年")]').click()
+            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-7.ng-star-inserted")
+            self.find_element(By.XPATH, f'//li[contains(text(), " {start.year}年")]').click()
             self.find_element(By.XPATH, '//p[2]/nb-simple-select/span/span[2]').click()
-            time.sleep(1)
-            self.find_element(By.XPATH, f'//li[contains(text(), "{start.month}月")]').click()
+            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-8.ng-star-inserted")
+            self.find_element(By.XPATH, f'//li[contains(text(), " {start.month}月")]').click()
             self.find_element(By.XPATH, '//p[3]/nb-simple-select/span/span[2]').click()
-            time.sleep(1)
-            self.find_element(By.XPATH, f'//li[contains(text(), "{start.day}日")]').click()
+            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-9.ng-star-inserted")
+            self.find_element(By.XPATH, f'//li[contains(text(), " {start.day}日")]').click()
 
             # 終了日
             self.find_elements(By.XPATH, '//p[1]/nb-simple-select/span/span[2]')[1].click()
-            time.sleep(1)
-            e = self.find_elements(By.XPATH, f'//li[contains(text(), "{end.year}年")]')[1]
+            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-10.ng-star-inserted")
+            e = self.find_elements(By.XPATH, f'//li[contains(text(), " {end.year}年")]')[1]
             ActionChains(self.driver).move_to_element(e).perform()
             e.click()
             self.find_elements(By.XPATH, '//p[2]/nb-simple-select/span/span[2]')[1].click()
-            time.sleep(1)
-            e = self.find_elements(By.XPATH, f'//li[contains(text(), "{end.month}月")]')[1]
+            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-11.ng-star-inserted")
+            e = self.find_elements(By.XPATH, f'//li[contains(text(), " {end.month}月")]')[1]
             ActionChains(self.driver).move_to_element(e).perform()
             e.click()
             self.find_elements(By.XPATH, '//p[3]/nb-simple-select/span/span[2]')[1].click()
-            time.sleep(1)
-            e = self.find_elements(By.XPATH, f'//li[contains(text(), "{end.day}日")]')[1]
+            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-12.ng-star-inserted")
+            e = self.find_elements(By.XPATH, f'//li[contains(text(), " {end.day}日")]')[1]
             ActionChains(self.driver).move_to_element(e).perform()
             e.click()
         else:
@@ -278,9 +278,8 @@ class SBI(Bank, ABC):
             if period_value == period_text:
                 # Change to 最新100明細
                 self.find_element(By.XPATH, '//*[@id="filterTerm"]').click()
-                time.sleep(1)
+                self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c4-4.ng-star-inserted")
                 self.find_element(By.XPATH, '//*[@id="filterTerm_item_0"]').click()
-                time.sleep(1)
 
         # 適用
         display = '.m-btnEm-m.m-btnEffectAnc'
