@@ -31,7 +31,7 @@ class SBI(Bank, ABC):
 
         user_pw_elem = self.find_element(By.ID, 'loginPwdSet')
         user_pw_elem.send_keys(password)
-        self.driver.find_element(By.TAG_NAME, 'button').click()
+        self.driver.find_element(By.XPATH, '//nb-button-login/button').click()
         self.driver.set_window_size(1024, 3480)
         self._get_account_info()
 
@@ -146,7 +146,7 @@ class SBI(Bank, ABC):
             return []
         ret: list[Transaction] = []
         for d in df.iterrows():
-            v: str = f"-{d[1].iloc[3]}" if pd.isnull(d[1].iloc[2]) else d[1].iloc[2]
+            v: str = f"-{d[1].iloc[3]}" if pd.isnull(d[1].iloc[2]) else str(d[1].iloc[2])
             try:
                 ret.append(Transaction(
                     dt=datetime.strptime(d[1].iloc[0], "%Y/%m/%d").date(),
