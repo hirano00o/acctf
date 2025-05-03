@@ -23,13 +23,13 @@ class WealthNavi(Base):
         user_pw_elem = self.driver.find_element(By.ID, 'password')
         user_pw_elem.send_keys(password)
 
-        self.driver.find_element(By.ID, 'login').click()
+        self.driver.find_elements(By.NAME, 'action')[1].click()
 
         if totp is not None:
             otp_elem = self.find_element(By.ID, 'code')
             otp_elem.send_keys(int(get_code(totp)))
 
-            self.driver.find_element(By.ID, 'authentication-code-login').click()
+            self.driver.find_element(By.NAME, 'action').click()
 
         return self
 

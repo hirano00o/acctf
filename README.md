@@ -12,14 +12,8 @@ acctfは、銀行や証券会社をスクレイピングして入出金履歴、
       * 投資信託（金額/特定預り）
       * 投資信託（金額/NISA預り（つみたて投資枠））
       * 投資信託（金額/旧つみたてNISA預り）
-  * 外貨建て(USのみ)
-    * 株式
-      * 株式(現物)
 
 ### 銀行
-* みずほ銀行(円のみ)
-  * 預金
-  * 入出金履歴
 * 住信SBIネット銀行
   * 預金(ハイブリッド含む)(円のみ)
   * 入出金履歴
@@ -75,7 +69,7 @@ sbi.close()
 #### 預金
 
 ```python
-from acctf.bank.mizuho import Mizuho
+from acctf.bank.sbi import SBI
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -84,13 +78,13 @@ options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 driver = webdriver.Chrome(options=options)
 
-mizuho = Mizuho(driver=driver).login("<ユーザID>", "<パスワード>")
-b = mizuho.get_balance("7654321")
+sbi = SBI(driver=driver).login("<ユーザID>", "<パスワード>")
+b = sbi.get_balance("7654321")
 print(f"口座番号, 店舗, 残高, 口座タイプ")
 print(f"{b[0].account_number}, {b[0].branch_name}, {b[0].value}, {b[0].deposit_type}")
 
-mizuho.logout()
-mizuho.close()
+sbi.logout()
+sbi.close()
 ```
 
 ```console
@@ -99,36 +93,6 @@ mizuho.close()
 ```
 
 #### 入出金履歴
-
-下記はみずほ銀行の例です。
-
-```python
-from acctf.bank.mizuho import Mizuho
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-
-options = Options()
-options.add_argument('--headless')
-options.add_argument('--no-sandbox')
-driver = webdriver.Chrome(options=options)
-
-mizuho = Mizuho(driver=driver).login("<ユーザID>", "<パスワード>")
-hist = mizuho.get_transaction_history("7654321")
-# You can also specify the start/end date.
-# hist = mizuho.get_transaction_history("7654321", date(2023, 12, 1), date(2023, 12, 31))
-print(f"日付, 取引内容, 金額")
-for h in hist:
-  print(f"{h.date}, {h.content}, {h.value}")
-
-mizuho.logout()
-mizuho.close()
-```
-
-```console
-日付, 取引内容, 金額
-2023-12-01, ＡＴＭ引き出し, -10000.0
-2024-12-20, 給与, 200000.0
-```
 
 住信SBIネット銀行はUIの変更に伴い、履歴のCSVをダウンロードしてデータを取得する方式に変更しました。そのため、ドライバの設定時にダウンロードディレクトリを指定してください。
 また、ダウンロードしたCSVファイルはデータ取得後に削除されます。
