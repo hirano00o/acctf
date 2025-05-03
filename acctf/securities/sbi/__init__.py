@@ -4,11 +4,12 @@ from io import StringIO
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 
 from acctf.securities import Securities
 from acctf.securities.model import Value
-from acctf.securities.sbi.utils import get_formatted, AccountType
+from acctf.securities.sbi.utils import get_formatted, AccountType, get_formatted_for_ul_tables
 
 
 class SBI(Securities, ABC):
@@ -31,7 +32,10 @@ class SBI(Securities, ABC):
         return self
 
     def logout(self):
-        self.driver.find_element(By.XPATH, '//*[@id="logoutM"]/a/img').click()
+        try:
+            self.driver.find_element(By.XPATH, '//*[@id="logoutM"]/a/img').click()
+        except NoSuchElementException:
+            self.driver.find_element(By.XPATH, '//*[@id="logout-button"]').click()
 
     def get_stock_specific(self) -> list[Value]:
         # 口座管理ページ
@@ -55,15 +59,14 @@ class SBI(Securities, ABC):
         # 口座(外貨建)ページ
         self.find_element(By.LINK_TEXT, '口座(外貨建)').click()
         # 株式（現物）タブ
-        self.find_element(By.LINK_TEXT, '株式（現物）').click()
+        self.find_element(By.XPATH, '//*[@id="account-tab-layout"]/div/div[2]/div[2]/ul[1]/button[2]').click()
         html = self.driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
-        table = soup.find_all("table", border="0", cellpadding="1", cellspacing="1", width="100%")
-        if table is None or len(table) == 0:
+        table = soup.find_all("ul", class_="table-content table-primary-content")
+        if table is None or len(table) < 2:
             return []
 
-        df = pd.read_html(StringIO(str(table)), header=0)[0]
-        return get_formatted(df, AccountType.us)
+        return get_formatted_for_ul_tables(table[1])
 
 
     def get_fund_specific(self) -> list[Value]:
