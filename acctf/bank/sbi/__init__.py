@@ -137,6 +137,10 @@ class SBI(Bank, ABC):
 
         header = ["日付", "内容", "出金金額(円)", "入金金額(円)", "残高(円)", "メモ"]
         try:
+            # csv sample
+            # "日付","内容","出金金額(円)","入金金額(円)","残高(円)","メモ"
+            # "2025/01/01","利息",,"1","100,000","-"
+            # "2025/01/01","国税","1",,"100,000","-"
             df = pd.read_csv(file, names=header, header=0, usecols=[0, 1, 2, 3], encoding="sjis")
         except Exception as e:
             self._remove_download(download_directory=download_directory, file_path=file,
@@ -147,7 +151,7 @@ class SBI(Bank, ABC):
             return []
         ret: list[Transaction] = []
         for d in df.iterrows():
-            v: str = f"-{d[1].iloc[3]}" if pd.isnull(d[1].iloc[2]) else str(d[1].iloc[2])
+            v: str = f"-{d[1].iloc[2]}" if pd.isnull(d[1].iloc[3]) else str(d[1].iloc[3])
             try:
                 ret.append(Transaction(
                     dt=datetime.strptime(d[1].iloc[0], "%Y/%m/%d").date(),
