@@ -292,10 +292,10 @@ class SBI(Bank, ABC):
         self.wait_loading(By.CLASS_NAME, "loadingServer")
 
     def _get_account_info(self):
-        branch_name = '/html/body/app/div[1]/ng-component/div/main/ng-component/div[1]/div/div/div/div/div/span/span[1]'
+        branch_name = '//*[@id="after-loading-zandaka-area"]/div/div/div/div/div/span/span[1]'
         elem = self.find_element(By.XPATH, branch_name)
         self.branch_name = elem.text
 
         self.account_number = self.driver.find_element(
             By.XPATH,
-            '/html/body/app/div[1]/ng-component/div/main/ng-component/div[1]/div/div/div/div/div/span/span[3]').text
+            '//*[@id="after-loading-zandaka-area"]/div/div/div/div/div/span/span[3]').text
