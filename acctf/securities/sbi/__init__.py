@@ -3,9 +3,8 @@ from io import StringIO
 
 import pandas as pd
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.common import NoSuchElementException
-from selenium.webdriver.common.by import By
+from playwright.sync_api import Page
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from acctf.securities import Securities
 from acctf.securities.model import Value
@@ -17,33 +16,31 @@ class SBI(Securities, ABC):
     _df_fund_nisa_accum: pd.DataFrame = None
     _df_fund_old_nisa_accum: pd.DataFrame = None
 
-    def __init__(self, driver: webdriver = None, timeout: float = 30):
-        super().__init__(driver=driver, timeout=timeout)
-        self.driver.get('https://www.sbisec.co.jp/ETGate')
+    def __init__(self, page: Page, timeout: int = 30000):
+        super().__init__(page=page, timeout=timeout)
+        self.page.goto('https://www.sbisec.co.jp/ETGate')
 
 
     def login(self, user_id: str, password: str, totp: str | None = None):
-        user_id_elem = self.find_element(By.NAME, 'user_id')
-        user_id_elem.send_keys(user_id)
-        user_pw_elem = self.driver.find_element(By.NAME, 'user_password')
-        user_pw_elem.send_keys(password)
+        self.find_element('[name="user_id"]').fill(user_id)
+        self.page.locator('[name="user_password"]').fill(password)
 
-        self.driver.find_element(By.NAME, 'ACT_login').click()
+        self.page.locator('[name="ACT_login"]').click()
         return self
 
     def logout(self):
         try:
-            self.driver.find_element(By.XPATH, '//*[@id="logoutM"]/a/img').click()
-        except NoSuchElementException:
-            self.driver.find_element(By.XPATH, '//*[@id="logout-button"]').click()
+            self.page.locator('//*[@id="logoutM"]/a/img').click(timeout=self.timeout)
+        except PlaywrightTimeoutError:
+            self.page.locator('//*[@id="logout-button"]').click()
 
     def get_stock_specific(self) -> list[Value]:
         # 口座管理ページ
-        self.find_element(By.XPATH, '//*[@id="link02M"]/ul/li[3]/a/img').click()
+        self.find_element('//*[@id="link02M"]/ul/li[3]/a/img').click()
         # 株式(現物)タブ
-        self.find_element(By.LINK_TEXT, '株式(現物)').click()
+        self.page.get_by_role("link", name="株式(現物)").click()
 
-        html = self.driver.page_source.encode('utf-8')
+        html = self.page.content().encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find_all("table", border="0", cellpadding="1", cellspacing="1", width="400")
         if table is None or len(table) == 0:
@@ -55,12 +52,12 @@ class SBI(Securities, ABC):
 
     def get_stock_specific_us(self) -> list[Value]:
         # 口座管理ページ
-        self.find_element(By.XPATH, '//*[@id="link02M"]/ul/li[3]/a/img').click()
+        self.find_element('//*[@id="link02M"]/ul/li[3]/a/img').click()
         # 口座(外貨建)ページ
-        self.find_element(By.LINK_TEXT, '口座(外貨建)').click()
+        self.page.get_by_role("link", name="口座(外貨建)").click()
         # 株式（現物）タブ
-        self.find_element(By.XPATH, '//*[@id="account-tab-layout"]/div/div[2]/div[2]/ul[1]/button[2]').click()
-        html = self.driver.page_source.encode('utf-8')
+        self.find_element('//*[@id="account-tab-layout"]/div/div[2]/div[2]/ul[1]/button[2]').click()
+        html = self.page.content().encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find_all("ul", class_="table-content table-primary-content")
         if table is None or len(table) < 2:
@@ -89,11 +86,11 @@ class SBI(Securities, ABC):
 
     def _get_fund_all(self):
         # 口座管理ページ
-        self.find_element(By.XPATH, '//*[@id="link02M"]/ul/li[3]/a/img').click()
+        self.find_element('//*[@id="link02M"]/ul/li[3]/a/img').click()
         # 投信タブ
-        self.find_element(By.LINK_TEXT, '投信').click()
+        self.page.get_by_role("link", name="投信").click()
 
-        html = self.driver.page_source.encode('utf-8')
+        html = self.page.content().encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find_all("table", border="0", cellpadding="1", cellspacing="1", width="400")
         if table is None or len(table) == 0:
