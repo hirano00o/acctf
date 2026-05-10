@@ -20,12 +20,13 @@ class SBI(Bank, ABC):
 
     def __init__(self, page: Page, timeout: int = 30000):
         super().__init__(page=page, timeout=timeout)
-        self.page.goto('https://www.netbk.co.jp/contents/pages/wpl010101/i010101CT/DI01010210')
+        self.page.goto('https://www.netbk.co.jp/contents/pages/wpl010101E/i010101CT/DI01010240')
 
     def login(self, user_id: str, password: str, totp: str | None = None):
-        self.find_element('#userNameNewLogin').fill(user_id)
-        self.find_element('#loginPwdSet').fill(password)
-        self.page.locator('//nb-button-login/button').click()
+        self.find_element('input[name="username"]').fill(user_id)
+        self.find_element('ul.ren_btn._ren_main a._ren_fill_blue').click()
+        self.find_element('input#loginPwd').fill(password)
+        self.find_element('ul._login_spec button._ren_fill_blue').click()
         self.page.set_viewport_size({"width": 1024, "height": 3480})
         time.sleep(1)
         self._get_account_info()
