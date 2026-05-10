@@ -189,7 +189,7 @@ with sync_playwright() as p:
 
 Raspberry Pi 5 などの arm64 Linux 環境では、Playwright が公式に提供しているブラウザバイナリは **Chromium のみ** です。Firefox および branded Chrome は arm64 Linux では動作しません。
 
-公式 Docker イメージ `mcr.microsoft.com/playwright/python` は linux/amd64 / linux/arm64 の multi-arch ビルドが提供されているため、Kubernetes クラスタ (arm64) 上でも追加設定なしに利用できます。
+公式 Docker イメージ `mcr.microsoft.com/playwright/python` は linux/amd64 / linux/arm64 の multi-arch ビルドが提供されているため、Kubernetes クラスタ (arm64) 上でも追加設定なしに利用できます。Docker での実行サンプルは [`examples/`](examples/) を参照してください。
 
 # v0.5.x からの移行
 
