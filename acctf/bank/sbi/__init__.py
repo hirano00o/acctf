@@ -3,14 +3,13 @@ from pathlib import Path
 import time
 from abc import ABC
 from datetime import date, datetime
-from io import StringIO
 
 import pandas as pd
 from bs4 import BeautifulSoup
 from playwright.sync_api import Page
 
 from acctf.bank import Bank, Balance, Transaction
-from acctf.bank.model import str_to_deposit_type, CurrencyType
+from acctf.bank.model import DepositType, str_to_deposit_type, CurrencyType
 from acctf.bank.sbi.model import AccountName
 
 
@@ -46,27 +45,109 @@ class SBI(Bank, ABC):
 
         html = self.page.content().encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
-        table = soup.find_all("table")
-        if table is None or len(table) == 0:
-            return []
 
-        df = pd.read_html(StringIO(str(table)))
-        ret = []
-        for d in df:
-            if d.columns[-1] == "取引メニュー" and d.columns[-2] != "円換算額":
-                dtype = str_to_deposit_type("普通")
-                if d.columns[0] != "口座":
-                    dtype = str_to_deposit_type("ハイブリッド")
-                ret.append(
-                    Balance(
-                        account_number=self.account_number,
-                        deposit_type=dtype,
-                        branch_name=self.branch_name,
-                        value=float(d["残高"][0].replace(",", "").replace("円", ""))
-                    )
-                )
+        ret: list[Balance] = []
+        for item in soup.select('li.m-zandaka-item'):
+            classes = item.get('class') or []
+            # SBI証券保有資産評価は預金口座ではないため除外
+            if 'm-sbisec-item' in classes:
+                continue
+
+            if 'm-zandaka-item-hybrid' in classes:
+                dtype = self._safe_deposit_type("ハイブリッド")
+                ret.extend(self._parse_hybrid_balance(item, dtype))
+            elif 'm-zandaka-gaika' in classes:
+                dtype = self._safe_deposit_type("普通")
+                ret.extend(self._parse_foreign_balance(item, dtype))
+            else:
+                dtype = self._safe_deposit_type("普通")
+                ret.extend(self._parse_jpy_balance(item, dtype))
 
         return ret
+
+    @staticmethod
+    def _safe_deposit_type(label: str) -> DepositType:
+        try:
+            return str_to_deposit_type(label)
+        except ValueError:
+            return DepositType.ordinary
+
+    @staticmethod
+    def _parse_amount(text: str) -> float | None:
+        cleaned = text.replace(",", "").replace("円", "").strip()
+        for token in cleaned.split():
+            try:
+                return float(token)
+            except ValueError:
+                continue
+        try:
+            return float(cleaned)
+        except ValueError:
+            return None
+
+    def _parse_jpy_balance(self, item, dtype: DepositType) -> list[Balance]:
+        out: list[Balance] = []
+        for row in item.select('table tbody tr'):
+            bal_cell = row.find(attrs={"data-label": "残高"})
+            if bal_cell is None:
+                continue
+            val = self._parse_amount(bal_cell.get_text())
+            if val is None:
+                continue
+            name_cell = row.find('th', class_='m-zandaka-item-detail-name')
+            if name_cell is None:
+                name_cell = row.find(attrs={"data-label": "口座"})
+            name = name_cell.get_text(strip=True) if name_cell else "代表口座"
+            out.append(Balance(
+                account_number=self.account_number,
+                deposit_type=dtype,
+                branch_name=self.branch_name,
+                value=val,
+                account_name=name,
+            ))
+        return out
+
+    def _parse_hybrid_balance(self, item, dtype: DepositType) -> list[Balance]:
+        out: list[Balance] = []
+        for row in item.select('table tbody tr'):
+            bal_cell = row.find(attrs={"data-label": "残高"})
+            if bal_cell is None:
+                continue
+            val = self._parse_amount(bal_cell.get_text())
+            if val is None:
+                continue
+            out.append(Balance(
+                account_number=self.account_number,
+                deposit_type=dtype,
+                branch_name=self.branch_name,
+                value=val,
+                account_name="代表口座",
+            ))
+        return out
+
+    def _parse_foreign_balance(self, item, dtype: DepositType) -> list[Balance]:
+        out: list[Balance] = []
+        for table in item.find_all('table'):
+            h3 = table.find_previous('h3')
+            currency_name = h3.get_text(strip=True) if h3 else ""
+            for row in table.select('tbody tr'):
+                bal_cell = row.find(attrs={"data-label": "残高"})
+                if bal_cell is None:
+                    continue
+                val = self._parse_amount(bal_cell.get_text())
+                if val is None:
+                    continue
+                name_cell = row.find(attrs={"data-label": "口座"})
+                row_name = name_cell.get_text(strip=True) if name_cell else "代表口座"
+                name = f"{currency_name} {row_name}".strip() if currency_name else row_name
+                out.append(Balance(
+                    account_number=self.account_number,
+                    deposit_type=dtype,
+                    branch_name=self.branch_name,
+                    value=val,
+                    account_name=name,
+                ))
+        return out
 
     def get_transaction_history(
         self,
