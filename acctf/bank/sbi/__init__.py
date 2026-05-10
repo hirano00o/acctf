@@ -1,4 +1,3 @@
-import glob
 import os
 from pathlib import Path
 import time
@@ -8,9 +7,7 @@ from io import StringIO
 
 import pandas as pd
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
+from playwright.sync_api import Page
 
 from acctf.bank import Bank, Balance, Transaction
 from acctf.bank.model import str_to_deposit_type, CurrencyType
@@ -21,37 +18,32 @@ class SBI(Bank, ABC):
     account_number = ""
     branch_name = ""
 
-    def __init__(self, driver: webdriver = None, timeout: float = 30):
-        super().__init__(driver=driver, timeout=timeout)
-        self.driver.get('https://www.netbk.co.jp/contents/pages/wpl010101/i010101CT/DI01010210')
+    def __init__(self, page: Page, timeout: int = 30000):
+        super().__init__(page=page, timeout=timeout)
+        self.page.goto('https://www.netbk.co.jp/contents/pages/wpl010101/i010101CT/DI01010210')
 
     def login(self, user_id: str, password: str, totp: str | None = None):
-        user_id_elem = self.find_element(By.ID, 'userNameNewLogin')
-        user_id_elem.send_keys(user_id)
-
-        user_pw_elem = self.find_element(By.ID, 'loginPwdSet')
-        user_pw_elem.send_keys(password)
-        self.driver.find_element(By.XPATH, '//nb-button-login/button').click()
-        self.driver.set_window_size(1024, 3480)
+        self.find_element('#userNameNewLogin').fill(user_id)
+        self.find_element('#loginPwdSet').fill(password)
+        self.page.locator('//nb-button-login/button').click()
+        self.page.set_viewport_size({"width": 1024, "height": 3480})
         time.sleep(1)
         self._get_account_info()
 
         return self
 
     def logout(self):
-        self.driver.find_element(By.CSS_SELECTOR, '.header_logout.ng-star-inserted').click()
+        self.page.locator('.header_logout.ng-star-inserted').click()
 
     def get_balance(self, account_number: str) -> list[Balance]:
         if account_number != "" and account_number is not None:
             self.account_number = account_number
 
-        balance = 'm-icon-ps_balance'
-        elem = self.find_element_to_be_clickable(By.CLASS_NAME, balance)
-        elem.click()
+        self.find_element_to_be_clickable('.m-icon-ps_balance').click()
 
-        self.wait_loading(By.CLASS_NAME, "loadingServer")
+        self.wait_loading('.loadingServer')
 
-        html = self.driver.page_source.encode('utf-8')
+        html = self.page.content().encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
         table = soup.find_all("table")
         if table is None or len(table) == 0:
@@ -90,7 +82,8 @@ class SBI(Bank, ABC):
         :param start: start date of transaction history. After the 1st of the month before the previous month.
         :param end: end date of transaction history. Until today.
         :param currency: currency of transaction history.
-        :param download_directory: temporarily download directory. Specify the directory that it sets to the driver.
+        :param download_directory: temporarily download directory. The browser context must be created with
+            ``accept_downloads=True``.
         :param account_name: account name. When you get the purpose account's transaction history, specify the account
         name with string.
         """
@@ -99,21 +92,18 @@ class SBI(Bank, ABC):
         if account_name != AccountName.Representative and currency != CurrencyType.jpy:
             raise AttributeError("currencies other than JPY can only be combined with the AccountName.Representative")
 
+        download_dir = Path(download_directory)
         exist_directory = False
         try:
-            os.makedirs(download_directory)
+            os.makedirs(download_dir)
         except FileExistsError:
             exist_directory = True
 
-        download_path = f"{str(Path(download_directory))}/nyushukinmeisai_*.csv"
+        self.wait_loading('.loading-Server')
 
-        self.wait_loading(By.CLASS_NAME, "loading-Server")
+        self.find_element_to_be_clickable('.m-icon-ps_details').click()
 
-        details = 'm-icon-ps_details'
-        elem = self.find_element_to_be_clickable(By.CLASS_NAME, details)
-        elem.click()
-
-        self.wait_loading(By.CLASS_NAME, "loadingServer")
+        self.wait_loading('.loadingServer')
 
         # 口座変更
         self._change_account(account_name=account_name)
@@ -124,11 +114,12 @@ class SBI(Bank, ABC):
         # 明細の表示
         self._get_transaction(start, end)
 
+        file = ""
         try:
             # 明細のダウンロード
-            file = self._download_transaction(download_full_path=download_path)
+            file = self._download_transaction(download_directory=download_dir)
         except Exception as e:
-            self._remove_download(download_directory=download_directory, file_path=file,
+            self._remove_download(download_directory=download_dir, file_path=file,
                                   exist_directory=exist_directory)
             raise e
 
@@ -143,7 +134,7 @@ class SBI(Bank, ABC):
             # "2025/01/01","国税","1",,"100,000","-"
             df = pd.read_csv(file, names=header, header=0, usecols=[0, 1, 2, 3], encoding="sjis")
         except Exception as e:
-            self._remove_download(download_directory=download_directory, file_path=file,
+            self._remove_download(download_directory=download_dir, file_path=file,
                                   exist_directory=exist_directory)
             raise e
 
@@ -159,11 +150,11 @@ class SBI(Bank, ABC):
                     value=float(v.replace(",", "")),
                 ))
             except ValueError:
-                self._remove_download(download_directory=download_directory, file_path=file,
+                self._remove_download(download_directory=download_dir, file_path=file,
                                       exist_directory=exist_directory)
                 return ret
 
-        self._remove_download(download_directory=download_directory, file_path=file,
+        self._remove_download(download_directory=download_dir, file_path=file,
                               exist_directory=exist_directory)
         return ret
 
@@ -171,15 +162,15 @@ class SBI(Bank, ABC):
         if account_name == AccountName.Representative:
             return
 
-        self.find_element(By.XPATH, '//*[@id="acctBusPdCodeInput"]').click()
+        self.find_element('//*[@id="acctBusPdCodeInput"]').click()
         time.sleep(1)
 
         if account_name == AccountName.Hybrid:
-            self.find_element(By.XPATH, '//*[@id="acctBusPdCodeInput_item_1"]').click()
+            self.find_element('//*[@id="acctBusPdCodeInput_item_1"]').click()
             return
 
         # 目的別口座
-        self.find_element(By.XPATH, f'//li[contains(text(), "{account_name}")]').click()
+        self.find_element(f'//li[contains(text(), "{account_name}")]').click()
 
     def _change_currency(self, currency: CurrencyType, account_name: AccountName | str):
         if account_name != AccountName.Representative:
@@ -190,34 +181,31 @@ class SBI(Bank, ABC):
             CurrencyType.usd: '//*[@id="crncyCode_item_1"]',
         }
         select_currency = '//*[@id="crncyCode"]/span[2]'
-        self.find_element(By.XPATH, select_currency).click()
+        self.find_element(select_currency).click()
         time.sleep(1)
-        e = self.find_element(By.XPATH, currency_map[currency])
-        ActionChains(self.driver).move_to_element(e).perform()
+        e = self.find_element(currency_map[currency])
+        e.hover()
         e.click()
         time.sleep(1)
 
-    def _download_transaction(self, download_full_path: str) -> str:
-        e = self.find_element(By.CSS_SELECTOR, '.m-boxError.ng-star-inserted', False)
+    def _download_transaction(self, download_directory: Path) -> str:
+        e = self.find_element('.m-boxError.ng-star-inserted', has_raised=False)
         if e is not None:
             return ""
 
-        # ダウンロード
-        self.find_element(By.XPATH, '//section/div/div[1]/nav/ul/li[2]/ul/li[2]').click()
-        # CSV
-        self.find_element(By.XPATH, '//span[contains(text(), "CSV")]').click()
+        with self.page.expect_download(timeout=self.timeout) as dl_info:
+            # ダウンロード
+            self.find_element('//section/div/div[1]/nav/ul/li[2]/ul/li[2]').click()
+            # CSV
+            self.find_element('//span[contains(text(), "CSV")]').click()
 
-        timeout_sec = 3
-        while not glob.glob(download_full_path):
-            time.sleep(1)
-            timeout_sec -= 1
-            if timeout_sec < 0:
-                raise Exception("downloads are taking too long")
-
-        return glob.glob(download_full_path)[0]
+        download = dl_info.value
+        dest = str(Path(download_directory) / download.suggested_filename)
+        download.save_as(dest)
+        return dest
 
     def _remove_download(self, download_directory: Path, file_path: str, exist_directory: bool):
-        if os.path.isfile(file_path):
+        if file_path and os.path.isfile(file_path):
             os.remove(file_path)
         if not exist_directory:
             os.removedirs(download_directory)
@@ -230,8 +218,7 @@ class SBI(Bank, ABC):
         default_period_text = "最新100明細"
         period_text = "期間指定"
         # 絞り込み
-        elem = self.find_element(By.XPATH, "//section/div/div[2]/div[1]/nav/ul/li[1]")
-        elem.click()
+        self.find_element("//section/div/div[2]/div[1]/nav/ul/li[1]").click()
         time.sleep(1)
 
         if start is not None:
@@ -242,60 +229,58 @@ class SBI(Bank, ABC):
             if not min_date <= start < end <= max_date:
                 raise AttributeError(f"date can be set between {min_date} and {max_date}")
 
-            period_value = self.find_element(By.XPATH, '//*[@id="filterTerm"]/span[2]').text
+            period_value = self.find_element('//*[@id="filterTerm"]/span[2]').inner_text()
             if period_value == default_period_text:
                 # 期間指定
-                self.find_element(By.XPATH, '//*[@id="filterTerm"]').click()
-                self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c4-4.ng-star-inserted")
-                self.find_element(By.XPATH, '//*[@id="filterTerm_item_5"]').click()
-                self.find_element(By.CLASS_NAME, "term-date-slc.ng-tns-c3-3.ng-star-inserted")
+                self.find_element('//*[@id="filterTerm"]').click()
+                self.find_element('.ui-menu-item.ng-tns-c4-4.ng-star-inserted')
+                self.find_element('//*[@id="filterTerm_item_5"]').click()
+                self.find_element('.term-date-slc.ng-tns-c3-3.ng-star-inserted')
 
             # 開始日
-            self.find_element(By.XPATH, '//p[1]/nb-simple-select/span/span[2]').click()
-            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-7.ng-star-inserted")
-            self.find_element(By.XPATH, f'//li[contains(text(), " {start.year}年")]').click()
-            self.find_element(By.XPATH, '//p[2]/nb-simple-select/span/span[2]').click()
-            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-8.ng-star-inserted")
-            self.find_element(By.XPATH, f'//li[contains(text(), " {start.month}月")]').click()
-            self.find_element(By.XPATH, '//p[3]/nb-simple-select/span/span[2]').click()
-            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-9.ng-star-inserted")
-            self.find_element(By.XPATH, f'//li[contains(text(), " {start.day}日")]').click()
+            self.find_element('//p[1]/nb-simple-select/span/span[2]').click()
+            self.find_element('.ui-menu-item.ng-tns-c8-7.ng-star-inserted')
+            self.find_element(f'//li[contains(text(), " {start.year}年")]').click()
+            self.find_element('//p[2]/nb-simple-select/span/span[2]').click()
+            self.find_element('.ui-menu-item.ng-tns-c8-8.ng-star-inserted')
+            self.find_element(f'//li[contains(text(), " {start.month}月")]').click()
+            self.find_element('//p[3]/nb-simple-select/span/span[2]').click()
+            self.find_element('.ui-menu-item.ng-tns-c8-9.ng-star-inserted')
+            self.find_element(f'//li[contains(text(), " {start.day}日")]').click()
 
             # 終了日
-            self.find_elements(By.XPATH, '//p[1]/nb-simple-select/span/span[2]')[1].click()
-            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-10.ng-star-inserted")
-            e = self.find_elements(By.XPATH, f'//li[contains(text(), " {end.year}年")]')[1]
-            ActionChains(self.driver).move_to_element(e).perform()
+            self.find_elements('//p[1]/nb-simple-select/span/span[2]').nth(1).click()
+            self.find_element('.ui-menu-item.ng-tns-c8-10.ng-star-inserted')
+            e = self.find_elements(f'//li[contains(text(), " {end.year}年")]').nth(1)
+            e.hover()
             e.click()
-            self.find_elements(By.XPATH, '//p[2]/nb-simple-select/span/span[2]')[1].click()
-            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-11.ng-star-inserted")
-            e = self.find_elements(By.XPATH, f'//li[contains(text(), " {end.month}月")]')[1]
-            ActionChains(self.driver).move_to_element(e).perform()
+            self.find_elements('//p[2]/nb-simple-select/span/span[2]').nth(1).click()
+            self.find_element('.ui-menu-item.ng-tns-c8-11.ng-star-inserted')
+            e = self.find_elements(f'//li[contains(text(), " {end.month}月")]').nth(1)
+            e.hover()
             e.click()
-            self.find_elements(By.XPATH, '//p[3]/nb-simple-select/span/span[2]')[1].click()
-            self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c8-12.ng-star-inserted")
-            e = self.find_elements(By.XPATH, f'//li[contains(text(), " {end.day}日")]')[1]
-            ActionChains(self.driver).move_to_element(e).perform()
+            self.find_elements('//p[3]/nb-simple-select/span/span[2]').nth(1).click()
+            self.find_element('.ui-menu-item.ng-tns-c8-12.ng-star-inserted')
+            e = self.find_elements(f'//li[contains(text(), " {end.day}日")]').nth(1)
+            e.hover()
             e.click()
         else:
-            period_value = self.find_element(By.XPATH, '//*[@id="filterTerm"]/span[2]').text
+            period_value = self.find_element('//*[@id="filterTerm"]/span[2]').inner_text()
             if period_value == period_text:
                 # Change to 最新100明細
-                self.find_element(By.XPATH, '//*[@id="filterTerm"]').click()
-                self.find_element(By.CLASS_NAME, "ui-menu-item.ng-tns-c4-4.ng-star-inserted")
-                self.find_element(By.XPATH, '//*[@id="filterTerm_item_0"]').click()
+                self.find_element('//*[@id="filterTerm"]').click()
+                self.find_element('.ui-menu-item.ng-tns-c4-4.ng-star-inserted')
+                self.find_element('//*[@id="filterTerm_item_0"]').click()
 
         # 適用
-        display = '.m-btnEm-m.m-btnEffectAnc'
-        self.find_element(By.CSS_SELECTOR, display).click()
+        self.find_element('.m-btnEm-m.m-btnEffectAnc').click()
 
-        self.wait_loading(By.CLASS_NAME, "loadingServer")
+        self.wait_loading('.loadingServer')
 
     def _get_account_info(self):
         branch_name = '//*[@id="after-loading-zandaka-area"]/div/div/div/div/div/span/span[1]'
-        elem = self.find_element(By.XPATH, branch_name)
-        self.branch_name = elem.text
+        self.branch_name = self.find_element(branch_name).inner_text()
 
-        self.account_number = self.driver.find_element(
-            By.XPATH,
-            '//*[@id="after-loading-zandaka-area"]/div/div/div/div/div/span/span[3]').text
+        self.account_number = self.page.locator(
+            '//*[@id="after-loading-zandaka-area"]/div/div/div/div/div/span/span[3]'
+        ).inner_text()
