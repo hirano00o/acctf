@@ -17,9 +17,9 @@ class WealthNavi(Base):
 
     def login(self, user_id: str, password: str, totp: str | None = None):
         self.find_element('#username').fill(user_id)
+        self.page.get_by_role("button", name="ID・パスワードでログイン").click()
         self.page.locator('#password').fill(password)
-
-        self.page.locator('[name="action"]').nth(1).click()
+        self.page.get_by_role("button", name="ログイン").click()
 
         if totp is not None:
             self.find_element('#code').fill(str(get_code(totp)))
@@ -28,11 +28,12 @@ class WealthNavi(Base):
         return self
 
     def logout(self):
-        self.page.locator('.logout-submit').click()
+        self.page.locator('.logout-submit').first.click()
 
     def get_valuation(self) -> list[Asset]:
         self.page.set_viewport_size({"width": 1024, "height": 600})
-        self.find_element('a:has-text("ポートフォリオ")').click()
+        self.page.locator('#menu-portfolio a').click()
+        self.find_element('#assets-class-data')
 
         html = self.page.content().encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
