@@ -4,13 +4,12 @@ RUN pip install --no-cache-dir uv
 
 WORKDIR /app
 
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+COPY pyproject.toml ./
+RUN uv sync --no-dev
 
 # arm64 Linux では Chromium のみサポート (Firefox は arm64 非対応)
 RUN uv run playwright install chromium --with-deps
 
-COPY . .
-RUN uv sync --frozen --no-dev
+COPY main.py .
 
-CMD ["uv", "run", "python"]
+CMD ["uv", "run", "python", "main.py"]
