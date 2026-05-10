@@ -28,7 +28,7 @@ class WealthNavi(Base):
         return self
 
     def logout(self):
-        self.page.locator('.logout-submit').click()
+        self.page.locator('.logout-submit').first.click()
 
     def get_valuation(self) -> list[Asset]:
         self.page.set_viewport_size({"width": 1024, "height": 600})
