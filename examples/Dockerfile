@@ -5,11 +5,14 @@ RUN pip install --no-cache-dir uv
 WORKDIR /app
 
 COPY pyproject.toml ./
-RUN uv sync --no-dev
+
+# pyproject.toml の dependencies を venv にインストール
+RUN uv venv && \
+    uv pip install --python .venv/bin/python --no-cache-dir --requirement pyproject.toml
 
 # arm64 Linux では Chromium のみサポート (Firefox は arm64 非対応)
-RUN uv run python -m playwright install chromium --with-deps
+RUN .venv/bin/python -m playwright install chromium --with-deps
 
 COPY main.py .
 
-CMD ["uv", "run", "python", "main.py"]
+CMD [".venv/bin/python", "main.py"]
