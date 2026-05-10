@@ -34,13 +34,18 @@ acctfは、銀行や証券会社をスクレイピングして入出金履歴、
 
 ```console
 pip install acctf
+playwright install chromium
 ```
 
 uvを利用する場合:
 
 ```console
 uv add acctf
+uv run playwright install chromium
 ```
+
+> **注**: v0.6.0 以降、ブラウザ自動化に [Playwright](https://playwright.dev/python/) を採用しています。
+> arm64 Linux (Raspberry Pi 5 など) では Chromium のみサポートされ、Firefox は動作しません。
 
 ## サンプル
 
@@ -48,22 +53,20 @@ uv add acctf
 
 ```python
 from acctf.securities.sbi import SBI
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from playwright.sync_api import sync_playwright
 
-options = Options()
-options.add_argument('--headless')
-options.add_argument('--no-sandbox')
-driver = webdriver.Chrome(options=options)
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
 
-sbi = SBI(driver=driver).login("<ユーザID>", "<パスワード>")
-stocks = sbi.get_stock_specific()
-print("銘柄, 数量, 取得単価, 現在値")
-for s in stocks:
-  print(f"{s.name}, {s.amount}, {s.acquisition_value}, {s.current_value}")
+    sbi = SBI(page=page).login("<ユーザID>", "<パスワード>")
+    stocks = sbi.get_stock_specific()
+    print("銘柄, 数量, 取得単価, 現在値")
+    for s in stocks:
+        print(f"{s.name}, {s.amount}, {s.acquisition_value}, {s.current_value}")
 
-sbi.logout()
-sbi.close()
+    sbi.logout()
+    browser.close()
 ```
 
 ```console
@@ -79,21 +82,19 @@ sbi.close()
 
 ```python
 from acctf.bank.sbi import SBI
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from playwright.sync_api import sync_playwright
 
-options = Options()
-options.add_argument('--headless')
-options.add_argument('--no-sandbox')
-driver = webdriver.Chrome(options=options)
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
 
-sbi = SBI(driver=driver).login("<ユーザID>", "<パスワード>")
-b = sbi.get_balance("7654321")
-print(f"口座番号, 店舗, 残高, 口座タイプ")
-print(f"{b[0].account_number}, {b[0].branch_name}, {b[0].value}, {b[0].deposit_type}")
+    sbi = SBI(page=page).login("<ユーザID>", "<パスワード>")
+    b = sbi.get_balance("7654321")
+    print(f"口座番号, 店舗, 残高, 口座タイプ")
+    print(f"{b[0].account_number}, {b[0].branch_name}, {b[0].value}, {b[0].deposit_type}")
 
-sbi.logout()
-sbi.close()
+    sbi.logout()
+    browser.close()
 ```
 
 ```console
@@ -103,61 +104,50 @@ sbi.close()
 
 #### 入出金履歴
 
-住信SBIネット銀行はUIの変更に伴い、履歴のCSVをダウンロードしてデータを取得する方式に変更しました。そのため、ドライバの設定時にダウンロードディレクトリを指定してください。
+住信SBIネット銀行はUIの変更に伴い、履歴のCSVをダウンロードしてデータを取得する方式です。
+ブラウザコンテキストを `accept_downloads=True` で生成する必要があります。
 また、ダウンロードしたCSVファイルはデータ取得後に削除されます。
 
 ```python
 from pathlib import Path
 
-from acctf.bank.sbi import SBI
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from acctf.bank.sbi import SBI, AccountName
+from acctf.bank import CurrencyType
+from playwright.sync_api import sync_playwright
 from datetime import date
 
-from acctf.bank.sbi import AccountName
-from acctf.bank import CurrencyType
-
 download_directory = str(Path.cwd()) + "/tmp"
-options = Options()
-options.add_argument('--headless')
-options.add_argument('--no-sandbox')
-options.add_experimental_option("prefs", {
-  "download.default_directory": download_directory,
-})
-driver = webdriver.Chrome(options=options)
 
-# Firefoxを利用する場合
-# options = webdriver.FirefoxOptions()
-# options.add_argument("-headless")
-# options.set_preference("browser.download.folderList", 2)
-# options.set_preference("browser.download.dir", download_directory)
-# service = webdriver.FirefoxService()
-# driver = webdriver.Firefox(service=service, options=options)
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    # CSVダウンロードのため accept_downloads=True が必須
+    context = browser.new_context(accept_downloads=True)
+    page = context.new_page()
 
-sbi = SBI(driver=driver).login("<ユーザID>", "<パスワード>")
-hist = sbi.get_transaction_history(
-  "7654321",
-  date(2023, 12, 1),
-  date(2023, 12, 31),
-  download_directory=download_directory,
-  currency=CurrencyType.jpy,
-  account_name=AccountName.Representative # 代表口座
-)
-hist += sbi.get_transaction_history(
-  "7654321",
-  date(2023, 12, 1),
-  date(2023, 12, 31),
-  download_directory=download_directory,
-  currency=CurrencyType.jpy,
-  account_name=AccountName.Hybrid # ハイブリッド預金口座
-)
+    sbi = SBI(page=page).login("<ユーザID>", "<パスワード>")
+    hist = sbi.get_transaction_history(
+        "7654321",
+        date(2023, 12, 1),
+        date(2023, 12, 31),
+        download_directory=download_directory,
+        currency=CurrencyType.jpy,
+        account_name=AccountName.Representative,  # 代表口座
+    )
+    hist += sbi.get_transaction_history(
+        "7654321",
+        date(2023, 12, 1),
+        date(2023, 12, 31),
+        download_directory=download_directory,
+        currency=CurrencyType.jpy,
+        account_name=AccountName.Hybrid,  # ハイブリッド預金口座
+    )
 
-print(f"日付, 取引内容, 金額")
-for h in hist:
-  print(f"{h.date}, {h.content}, {h.value}")
+    print(f"日付, 取引内容, 金額")
+    for h in hist:
+        print(f"{h.date}, {h.content}, {h.value}")
 
-sbi.logout()
-sbi.close()
+    sbi.logout()
+    browser.close()
 ```
 
 ### その他
@@ -166,23 +156,21 @@ sbi.close()
 
 ```python
 from acctf.other.wealthnavi import WealthNavi
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from playwright.sync_api import sync_playwright
 
-options = Options()
-options.add_argument('--headless')
-options.add_argument('--no-sandbox')
-driver = webdriver.Chrome(options=options)
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
 
-w = WealthNavi(driver=driver).login("<ユーザID>", "<パスワード>", "<TOTP>")
-# Time-based One Time Passwordを設定していない場合
-# w = WealthNavi().login("<ユーザID>", "<パスワード>")
-print("資産クラス, 現在価格, 損益")
-for h in w.get_valuation():
-  print(f"{h.name}, {h.value}, {h.pl_value}")
+    w = WealthNavi(page=page).login("<ユーザID>", "<パスワード>", "<TOTP>")
+    # Time-based One Time Passwordを設定していない場合
+    # w = WealthNavi(page=page).login("<ユーザID>", "<パスワード>")
+    print("資産クラス, 現在価格, 損益")
+    for h in w.get_valuation():
+        print(f"{h.name}, {h.value}, {h.pl_value}")
 
-w.logout()
-w.close()
+    w.logout()
+    browser.close()
 ```
 
 ```console
@@ -197,6 +185,32 @@ w.close()
 現金, 123456.0, 0.0
 ```
 
+# arm64 環境について
+
+Raspberry Pi 5 などの arm64 Linux 環境では、Playwright が公式に提供しているブラウザバイナリは **Chromium のみ** です。Firefox および branded Chrome は arm64 Linux では動作しません。
+
+公式 Docker イメージ `mcr.microsoft.com/playwright/python` は linux/amd64 / linux/arm64 の multi-arch ビルドが提供されているため、Kubernetes クラスタ (arm64) 上でも追加設定なしに利用できます。
+
+# v0.5.x からの移行
+
+v0.6.0 で Selenium から Playwright へ移行しました。コンストラクタが `driver=` (Selenium WebDriver) から `page=` (Playwright Page) に変わります。
+
+```python
+# v0.5.x (Selenium)
+from selenium import webdriver
+driver = webdriver.Chrome()
+sbi = SBI(driver=driver).login(...)
+
+# v0.6.0 (Playwright)
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    browser = p.chromium.launch()
+    page = browser.new_page()
+    sbi = SBI(page=page).login(...)
+```
+
+`timeout` の単位が秒 (`30`) からミリ秒 (`30000`) に変わっています。
+
 # 開発
 
 このリポジトリは [uv](https://docs.astral.sh/uv/) で依存関係を管理しています。
@@ -205,6 +219,7 @@ w.close()
 
 ```console
 uv sync
+uv run playwright install chromium
 ```
 
 ## ビルド
