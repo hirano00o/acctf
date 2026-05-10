@@ -40,7 +40,7 @@ class SBI(Bank, ABC):
         if account_number != "" and account_number is not None:
             self.account_number = account_number
 
-        self.find_element_to_be_clickable('.m-icon-ps_balance').click()
+        self.page.goto('https://www.netbk.co.jp/contents/pages/wpl020101A/i020101CT/DI02010105')
 
         self.wait_loading('.loadingServer')
 
@@ -102,7 +102,7 @@ class SBI(Bank, ABC):
 
         self.wait_loading('.loading-Server')
 
-        self.find_element_to_be_clickable('.m-icon-ps_details').click()
+        self.page.goto('https://www.netbk.co.jp/contents/pages/wpl020201/i020201CT/DI02020100')
 
         self.wait_loading('.loadingServer')
 
