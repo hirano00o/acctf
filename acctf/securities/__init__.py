@@ -1,14 +1,14 @@
 from abc import ABCMeta, abstractmethod
 
-from selenium import webdriver
+from playwright.sync_api import Page
 
 from acctf import Base
 from acctf.securities.model import Value
 
 
 class Securities(Base, metaclass=ABCMeta):
-    def __init__(self, driver: webdriver = None, timeout: float = 30):
-        super().__init__(driver=driver, timeout=timeout)
+    def __init__(self, page: Page, timeout: int = 30000):
+        super().__init__(page=page, timeout=timeout)
 
     @abstractmethod
     def get_stock_specific(self) -> list[Value]:

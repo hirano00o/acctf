@@ -1,15 +1,15 @@
 from datetime import date
 from abc import ABCMeta, abstractmethod
 
-from selenium import webdriver
+from playwright.sync_api import Page
 
 from acctf.bank.model import Transaction, Balance, CurrencyType
 from acctf import Base
 
 
 class Bank(Base, metaclass=ABCMeta):
-    def __init__(self, driver: webdriver = None, timeout: float = 30):
-        super().__init__(driver=driver, timeout=timeout)
+    def __init__(self, page: Page, timeout: int = 30000):
+        super().__init__(page=page, timeout=timeout)
 
     @abstractmethod
     def get_balance(self, account_number: str) -> list[Balance]:

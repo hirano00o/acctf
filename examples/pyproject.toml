@@ -1,0 +1,8 @@
+[project]
+name = "acctf-example"
+version = "0.1.0"
+description = "Example of running acctf in a Docker container"
+requires-python = ">=3.11"
+dependencies = [
+    "acctf>=0.6.0",
+]
