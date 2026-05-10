@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "acctf"
-version = "0.5.5"
+version = "0.6.0"
 description = "library that scrapes the data from an account such as securities, bank"
 readme = "README.md"
 requires-python = ">=3.11"
