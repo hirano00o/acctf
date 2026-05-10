@@ -1,16 +1,16 @@
 import os
+import re
 from pathlib import Path
 import time
 from abc import ABC
 from datetime import date, datetime
-from io import StringIO
 
 import pandas as pd
 from bs4 import BeautifulSoup
 from playwright.sync_api import Page
 
 from acctf.bank import Bank, Balance, Transaction
-from acctf.bank.model import str_to_deposit_type, CurrencyType
+from acctf.bank.model import DepositType, str_to_deposit_type, CurrencyType
 from acctf.bank.sbi.model import AccountName
 
 
@@ -20,12 +20,13 @@ class SBI(Bank, ABC):
 
     def __init__(self, page: Page, timeout: int = 30000):
         super().__init__(page=page, timeout=timeout)
-        self.page.goto('https://www.netbk.co.jp/contents/pages/wpl010101/i010101CT/DI01010210')
+        self.page.goto('https://www.netbk.co.jp/contents/pages/wpl010101E/i010101CT/DI01010240')
 
     def login(self, user_id: str, password: str, totp: str | None = None):
-        self.find_element('#userNameNewLogin').fill(user_id)
-        self.find_element('#loginPwdSet').fill(password)
-        self.page.locator('//nb-button-login/button').click()
+        self.find_element('input[name="username"]').fill(user_id)
+        self.find_element('ul.ren_btn._ren_main a._ren_fill_blue').click()
+        self.find_element('input#loginPwd').fill(password)
+        self.find_element('ul._login_spec button._ren_fill_blue').click()
         self.page.set_viewport_size({"width": 1024, "height": 3480})
         time.sleep(1)
         self._get_account_info()
@@ -39,33 +40,116 @@ class SBI(Bank, ABC):
         if account_number != "" and account_number is not None:
             self.account_number = account_number
 
-        self.find_element_to_be_clickable('.m-icon-ps_balance').click()
+        self.page.goto('https://www.netbk.co.jp/contents/pages/wpl020101A/i020101CT/DI02010105')
 
         self.wait_loading('.loadingServer')
 
         html = self.page.content().encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
-        table = soup.find_all("table")
-        if table is None or len(table) == 0:
-            return []
 
-        df = pd.read_html(StringIO(str(table)))
-        ret = []
-        for d in df:
-            if d.columns[-1] == "取引メニュー" and d.columns[-2] != "円換算額":
-                dtype = str_to_deposit_type("普通")
-                if d.columns[0] != "口座":
-                    dtype = str_to_deposit_type("ハイブリッド")
-                ret.append(
-                    Balance(
-                        account_number=self.account_number,
-                        deposit_type=dtype,
-                        branch_name=self.branch_name,
-                        value=float(d["残高"][0].replace(",", "").replace("円", ""))
-                    )
-                )
+        ret: list[Balance] = []
+        for item in soup.select('li.m-zandaka-item'):
+            classes = item.get('class') or []
+            # SBI証券保有資産評価は預金口座ではないため除外
+            if 'm-sbisec-item' in classes:
+                continue
+
+            if 'm-zandaka-item-hybrid' in classes:
+                dtype = self._safe_deposit_type("ハイブリッド")
+                ret.extend(self._parse_hybrid_balance(item, dtype))
+            elif 'm-zandaka-gaika' in classes:
+                dtype = self._safe_deposit_type("普通")
+                ret.extend(self._parse_foreign_balance(item, dtype))
+            else:
+                dtype = self._safe_deposit_type("普通")
+                ret.extend(self._parse_jpy_balance(item, dtype))
 
         return ret
+
+    @staticmethod
+    def _safe_deposit_type(label: str) -> DepositType:
+        try:
+            return str_to_deposit_type(label)
+        except ValueError:
+            return DepositType.ordinary
+
+    _AMOUNT_PATTERN = re.compile(r'-?[\d,]+(?:\.\d+)?')
+
+    @classmethod
+    def _parse_amount(cls, text: str) -> float | None:
+        m = cls._AMOUNT_PATTERN.search(text)
+        if m is None:
+            return None
+        try:
+            return float(m.group(0).replace(",", ""))
+        except ValueError:
+            return None
+
+    def _parse_jpy_balance(self, item, dtype: DepositType) -> list[Balance]:
+        out: list[Balance] = []
+        for row in item.select('table tbody tr'):
+            bal_cell = row.find(attrs={"data-label": "残高"})
+            if bal_cell is None:
+                continue
+            val = self._parse_amount(bal_cell.get_text())
+            if val is None:
+                continue
+            name_cell = row.find('th', class_='m-zandaka-item-detail-name')
+            if name_cell is None:
+                name_cell = row.find(attrs={"data-label": "口座"})
+            name = name_cell.get_text(strip=True) if name_cell else "代表口座"
+            out.append(Balance(
+                account_number=self.account_number,
+                deposit_type=dtype,
+                branch_name=self.branch_name,
+                value=val,
+                account_name=name,
+            ))
+        return out
+
+    def _parse_hybrid_balance(self, item, dtype: DepositType) -> list[Balance]:
+        out: list[Balance] = []
+        for row in item.select('table tbody tr'):
+            bal_cell = row.find(attrs={"data-label": "残高"})
+            if bal_cell is None:
+                continue
+            val = self._parse_amount(bal_cell.get_text())
+            if val is None:
+                continue
+            out.append(Balance(
+                account_number=self.account_number,
+                deposit_type=dtype,
+                branch_name=self.branch_name,
+                value=val,
+                account_name="代表口座",
+            ))
+        return out
+
+    def _parse_foreign_balance(self, item, dtype: DepositType) -> list[Balance]:
+        out: list[Balance] = []
+        for table in item.find_all('table'):
+            h3 = table.find_previous('h3')
+            currency_name = h3.get_text(strip=True) if h3 else ""
+            for row in table.select('tbody tr'):
+                bal_cell = row.find(attrs={"data-label": "残高"})
+                if bal_cell is None:
+                    continue
+                val = self._parse_amount(bal_cell.get_text())
+                if val is None:
+                    continue
+                name_cell = row.find('th', class_='m-zandaka-item-detail-name')
+                if name_cell is None:
+                    name_cell = row.find(attrs={"data-label": "口座"})
+                row_name = name_cell.get_text(strip=True) if name_cell else "代表口座"
+                name = f"{currency_name} {row_name}".strip() if currency_name else row_name
+                out.append(Balance(
+                    account_number=self.account_number,
+                    deposit_type=dtype,
+                    branch_name=self.branch_name,
+                    value=val,
+                    account_name=name,
+                ))
+        return out
 
     def get_transaction_history(
         self,
@@ -101,7 +185,7 @@ class SBI(Bank, ABC):
 
         self.wait_loading('.loading-Server')
 
-        self.find_element_to_be_clickable('.m-icon-ps_details').click()
+        self.page.goto('https://www.netbk.co.jp/contents/pages/wpl020201/i020201CT/DI02020100')
 
         self.wait_loading('.loadingServer')
 
@@ -113,6 +197,9 @@ class SBI(Bank, ABC):
 
         # 明細の表示
         self._get_transaction(start, end)
+
+        # 「さらに見る」を全展開してから CSV ダウンロード
+        self._expand_all_transactions()
 
         file = ""
         try:
@@ -188,16 +275,27 @@ class SBI(Bank, ABC):
         e.click()
         time.sleep(1)
 
+    def _expand_all_transactions(self) -> None:
+        """「さらに見る」ボタンを表示されている限りクリックし、検索結果を全件展開する。"""
+        max_iterations = 100
+        for _ in range(max_iterations):
+            more_btn = self.page.locator('div.meisai_more a.m-btnDefW-m').filter(visible=True)
+            if more_btn.count() == 0:
+                return
+            more_btn.first.click()
+            time.sleep(1)
+            self.wait_loading('.loadingServer', has_raised=False)
+
     def _download_transaction(self, download_directory: Path) -> str:
         e = self.find_element('.m-boxError.ng-star-inserted', has_raised=False)
         if e is not None:
             return ""
 
         with self.page.expect_download(timeout=self.timeout) as dl_info:
-            # ダウンロード
-            self.find_element('//section/div/div[1]/nav/ul/li[2]/ul/li[2]').click()
+            # ダウンロードメニュー展開
+            self.find_element('a._download').click()
             # CSV
-            self.find_element('//span[contains(text(), "CSV")]').click()
+            self.find_element('a.details-iconExcel').click()
 
         download = dl_info.value
         dest = str(Path(download_directory) / download.suggested_filename)
@@ -251,17 +349,17 @@ class SBI(Bank, ABC):
             # 終了日
             self.find_elements('//p[1]/nb-simple-select/span/span[2]').nth(1).click()
             self.find_element('.ui-menu-item.ng-tns-c8-10.ng-star-inserted')
-            e = self.find_elements(f'//li[contains(text(), " {end.year}年")]').nth(1)
+            e = self.page.locator(f'//li[contains(text(), " {end.year}年")]').filter(visible=True).first
             e.hover()
             e.click()
             self.find_elements('//p[2]/nb-simple-select/span/span[2]').nth(1).click()
             self.find_element('.ui-menu-item.ng-tns-c8-11.ng-star-inserted')
-            e = self.find_elements(f'//li[contains(text(), " {end.month}月")]').nth(1)
+            e = self.page.locator(f'//li[contains(text(), " {end.month}月")]').filter(visible=True).first
             e.hover()
             e.click()
             self.find_elements('//p[3]/nb-simple-select/span/span[2]').nth(1).click()
             self.find_element('.ui-menu-item.ng-tns-c8-12.ng-star-inserted')
-            e = self.find_elements(f'//li[contains(text(), " {end.day}日")]').nth(1)
+            e = self.page.locator(f'//li[contains(text(), " {end.day}日")]').filter(visible=True).first
             e.hover()
             e.click()
         else:

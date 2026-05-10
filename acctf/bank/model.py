@@ -49,9 +49,18 @@ class Balance:
     deposit_type: DepositType
     branch_name: str
     value: float
+    account_name: str
 
-    def __init__(self, account_number: str, deposit_type: DepositType, branch_name: str, value: float):
+    def __init__(
+        self,
+        account_number: str,
+        deposit_type: DepositType,
+        branch_name: str,
+        value: float,
+        account_name: str = "",
+    ):
         self.account_number = account_number
         self.deposit_type = deposit_type
         self.branch_name = branch_name
         self.value = value
+        self.account_name = account_name
