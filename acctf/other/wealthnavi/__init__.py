@@ -17,8 +17,8 @@ class WealthNavi(Base):
 
     def login(self, user_id: str, password: str, totp: str | None = None):
         self.find_element('#username').fill(user_id)
+        self.page.locator('[name="action"]').click()
         self.page.locator('#password').fill(password)
-
         self.page.locator('[name="action"]').nth(1).click()
 
         if totp is not None:
