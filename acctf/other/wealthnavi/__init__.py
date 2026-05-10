@@ -32,8 +32,8 @@ class WealthNavi(Base):
 
     def get_valuation(self) -> list[Asset]:
         self.page.set_viewport_size({"width": 1024, "height": 600})
-        self.find_element('a:has-text("ポートフォリオ")').click()
-        self.page.wait_for_load_state("networkidle")
+        self.page.locator('#menu-portfolio a').click()
+        self.find_element('#assets-class-data')
 
         html = self.page.content().encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
