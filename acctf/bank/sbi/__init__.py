@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 import time
 from abc import ABC
@@ -72,16 +73,15 @@ class SBI(Bank, ABC):
         except ValueError:
             return DepositType.ordinary
 
-    @staticmethod
-    def _parse_amount(text: str) -> float | None:
-        cleaned = text.replace(",", "").replace("円", "").strip()
-        for token in cleaned.split():
-            try:
-                return float(token)
-            except ValueError:
-                continue
+    _AMOUNT_PATTERN = re.compile(r'-?[\d,]+(?:\.\d+)?')
+
+    @classmethod
+    def _parse_amount(cls, text: str) -> float | None:
+        m = cls._AMOUNT_PATTERN.search(text)
+        if m is None:
+            return None
         try:
-            return float(cleaned)
+            return float(m.group(0).replace(",", ""))
         except ValueError:
             return None
 
@@ -137,7 +137,9 @@ class SBI(Bank, ABC):
                 val = self._parse_amount(bal_cell.get_text())
                 if val is None:
                     continue
-                name_cell = row.find(attrs={"data-label": "口座"})
+                name_cell = row.find('th', class_='m-zandaka-item-detail-name')
+                if name_cell is None:
+                    name_cell = row.find(attrs={"data-label": "口座"})
                 row_name = name_cell.get_text(strip=True) if name_cell else "代表口座"
                 name = f"{currency_name} {row_name}".strip() if currency_name else row_name
                 out.append(Balance(
