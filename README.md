@@ -36,6 +36,12 @@ acctfは、銀行や証券会社をスクレイピングして入出金履歴、
 pip install acctf
 ```
 
+uvを利用する場合:
+
+```console
+uv add acctf
+```
+
 ## サンプル
 
 ### 証券会社
@@ -189,4 +195,28 @@ w.close()
 金(IAU), 123456.0, 12345.0
 不動産(IYR), 123456.0, 12345.0
 現金, 123456.0, 0.0
+```
+
+# 開発
+
+このリポジトリは [uv](https://docs.astral.sh/uv/) で依存関係を管理しています。
+
+## セットアップ
+
+```console
+uv sync
+```
+
+## ビルド
+
+```console
+uv build
+```
+
+`dist/` 配下にホイール (`.whl`) と sdist (`.tar.gz`) が生成されます。
+
+## PyPIへの公開
+
+```console
+uv publish
 ```

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "acctf"
+version = "0.5.5"
+description = "library that scrapes the data from an account such as securities, bank"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "hirano00o" }]
+keywords = ["scrape", "account", "development"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "beautifulsoup4>=4.12.2",
+    "bs4>=0.0.1",
+    "lxml>=5.0.0",
+    "pandas>=2.1.4",
+    "PySocks>=1.7.1",
+    "selenium>=4.16.0",
+    "pyotp==2.9.0",
+    "html5lib>=1.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/hirano00o/acctf"
+Repository = "https://github.com/hirano00o/acctf"
+
+[tool.setuptools.packages.find]
+include = ["acctf*"]
+exclude = ["tests*"]
