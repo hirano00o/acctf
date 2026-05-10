@@ -19,7 +19,7 @@ class WealthNavi(Base):
         self.find_element('#username').fill(user_id)
         self.page.get_by_role("button", name="ID・パスワードでログイン").click()
         self.page.locator('#password').fill(password)
-        self.page.locator('[name="action"]').nth(1).click()
+        self.page.get_by_role("button", name="ログイン").click()
 
         if totp is not None:
             self.find_element('#code').fill(str(get_code(totp)))
