@@ -115,6 +115,9 @@ class SBI(Bank, ABC):
         # 明細の表示
         self._get_transaction(start, end)
 
+        # 「さらに見る」を全展開してから CSV ダウンロード
+        self._expand_all_transactions()
+
         file = ""
         try:
             # 明細のダウンロード
@@ -189,16 +192,27 @@ class SBI(Bank, ABC):
         e.click()
         time.sleep(1)
 
+    def _expand_all_transactions(self) -> None:
+        """「さらに見る」ボタンを表示されている限りクリックし、検索結果を全件展開する。"""
+        max_iterations = 100
+        for _ in range(max_iterations):
+            more_btn = self.page.locator('div.meisai_more a.m-btnDefW-m').filter(visible=True)
+            if more_btn.count() == 0:
+                return
+            more_btn.first.click()
+            time.sleep(1)
+            self.wait_loading('.loadingServer', has_raised=False)
+
     def _download_transaction(self, download_directory: Path) -> str:
         e = self.find_element('.m-boxError.ng-star-inserted', has_raised=False)
         if e is not None:
             return ""
 
         with self.page.expect_download(timeout=self.timeout) as dl_info:
-            # ダウンロード
-            self.find_element('//section/div/div[1]/nav/ul/li[2]/ul/li[2]').click()
+            # ダウンロードメニュー展開
+            self.find_element('a._download').click()
             # CSV
-            self.find_element('//span[contains(text(), "CSV")]').click()
+            self.find_element('a.details-iconExcel').click()
 
         download = dl_info.value
         dest = str(Path(download_directory) / download.suggested_filename)
