@@ -252,17 +252,17 @@ class SBI(Bank, ABC):
             # 終了日
             self.find_elements('//p[1]/nb-simple-select/span/span[2]').nth(1).click()
             self.find_element('.ui-menu-item.ng-tns-c8-10.ng-star-inserted')
-            e = self.find_elements(f'//li[contains(text(), " {end.year}年")]').nth(1)
+            e = self.page.locator(f'//li[contains(text(), " {end.year}年")]').filter(visible=True).first
             e.hover()
             e.click()
             self.find_elements('//p[2]/nb-simple-select/span/span[2]').nth(1).click()
             self.find_element('.ui-menu-item.ng-tns-c8-11.ng-star-inserted')
-            e = self.find_elements(f'//li[contains(text(), " {end.month}月")]').nth(1)
+            e = self.page.locator(f'//li[contains(text(), " {end.month}月")]').filter(visible=True).first
             e.hover()
             e.click()
             self.find_elements('//p[3]/nb-simple-select/span/span[2]').nth(1).click()
             self.find_element('.ui-menu-item.ng-tns-c8-12.ng-star-inserted')
-            e = self.find_elements(f'//li[contains(text(), " {end.day}日")]').nth(1)
+            e = self.page.locator(f'//li[contains(text(), " {end.day}日")]').filter(visible=True).first
             e.hover()
             e.click()
         else:
