@@ -8,7 +8,7 @@ COPY pyproject.toml ./
 RUN uv sync --no-dev
 
 # arm64 Linux では Chromium のみサポート (Firefox は arm64 非対応)
-RUN uv run playwright install chromium --with-deps
+RUN uv run python -m playwright install chromium --with-deps
 
 COPY main.py .
 
