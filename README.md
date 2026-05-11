@@ -2,19 +2,7 @@
 
 acctfは、銀行や証券会社をスクレイピングして入出金履歴、株や投信の保有数や取得価額、現在価格を取得するライブラリです。
 
-下記の銀行や証券会社等に対応しています。
-### 証券会社
-* SBI証券
-  * 円建て
-    * 株式
-      * 株式(現物)
-    * 投信
-      * 投資信託（金額/特定預り）
-      * 投資信託（金額/NISA預り（つみたて投資枠））
-      * 投資信託（金額/旧つみたてNISA預り）
-  * 外貨建て(USのみ)
-    * 株式
-      * 株式(現物)
+下記の銀行等に対応しています。
 
 ### 銀行
 * 住信SBIネット銀行
@@ -48,33 +36,6 @@ uv run playwright install chromium
 > arm64 Linux (Raspberry Pi 5 など) では Chromium のみサポートされ、Firefox は動作しません。
 
 ## サンプル
-
-### 証券会社
-
-```python
-from acctf.securities.sbi import SBI
-from playwright.sync_api import sync_playwright
-
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    page = browser.new_page()
-
-    sbi = SBI(page=page).login("<ユーザID>", "<パスワード>")
-    stocks = sbi.get_stock_specific()
-    print("銘柄, 数量, 取得単価, 現在値")
-    for s in stocks:
-        print(f"{s.name}, {s.amount}, {s.acquisition_value}, {s.current_value}")
-
-    sbi.logout()
-    browser.close()
-```
-
-```console
-銘柄, 数量, 取得単価, 現在値
-0000 銘柄1, 1000, 1234, 2345
-1111 銘柄2, 1500, 789, 987
-2222 銘柄3, 2000, 3450, 3456
-```
 
 ### 銀行
 
